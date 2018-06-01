@@ -1,0 +1,37 @@
+{
+  "name": "data-async-iterators",
+  "version": "0.5.0",
+  "description": "Utility functions to work with async iterables available in ES2018/TypeScript",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "repository": "pedromsilvapt/data-async-iterators",
+  "keywords": [
+    "js",
+    "future",
+    "deferred",
+    "async",
+    "promises",
+    "iterables",
+    "iterators",
+    "generators",
+    "loop",
+    "streams",
+    "pull"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pedro M. Silva <pemiolsi@hotmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "@pedromsilva/data-either": "0.0.2",
+    "@pedromsilva/data-future": "^1.0.0",
+    "data-cancel-token": "^0.5.2",
+    "data-optional": "0.0.2",
+    "data-semaphore": "^0.3.7",
+    "eventemitter3": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^8.10.11"
+  }
+}
