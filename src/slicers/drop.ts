@@ -21,7 +21,7 @@ export async function * dropWhile<T> ( iterable : AsyncIterableLike<T>, predicat
     let switched : boolean = false;
 
     for await ( let item of from( iterable ) ) {
-        if ( !switched && !await predicate( item, index ) ) {
+        if ( !switched && await predicate( item, index ) ) {
             continue;
         }
 

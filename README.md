@@ -4,7 +4,7 @@
 
 # Installation
 ```shell
-npm install --save data-async-iterator
+npm install --save data-async-iterators
 ```
 
 # Tips & Tricks
@@ -36,6 +36,8 @@ forEach( source, res => console.log( res ) );
 
 Or maybe a more pratical example
 ```typescript
+import { merge, map, forEach } from 'data-async-iterator';
+
 function findDevices () : AsyncIterable<Device> { /* ... */ };
 
 function connectDevice ( device : Device ) : AsyncIterable<DeviceStatus> { /* ... */ };
@@ -49,6 +51,6 @@ const devices : AsyncIterable<Device> = findDevices();
 const statuses : AsyncIterable<DeviceStatus> = merge( map( devices, connectDevice ) );
 
 // Consumes all 
-statuses.forEach( processStatus );
+forEach( statuses, processStatus );
 ```
 
