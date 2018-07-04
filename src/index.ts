@@ -37,6 +37,7 @@ export { reduce } from './reducers/reduce';
 export { toArray } from './reducers/toArray';
 export { toMap } from './reducers/toMap';
 export { toSet } from './reducers/toSet';
+export { toStream } from './reducers/toStream';
 
 export { liveUntil } from './retimers/liveUntil';
 export { debounce } from './retimers/debounce';
