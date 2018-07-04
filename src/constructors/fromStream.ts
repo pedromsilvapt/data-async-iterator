@@ -1,7 +1,6 @@
-import { Readable } from 'stream';
 import { emits } from '../generators/emits';
 
-export function fromStream<T> ( stream : Readable, chunkSize ?: number ) : AsyncIterable<T> {
+export function fromStream<T> ( stream : NodeJS.ReadableStream, chunkSize ?: number ) : AsyncIterable<T> {
     const emitter = emits<T>();
 
     let queued = false;
@@ -33,7 +32,7 @@ export function fromStream<T> ( stream : Readable, chunkSize ?: number ) : Async
                 queued = true;
             }
         } else {
-            emitter.value( result );
+            emitter.value( result as any as T );
         }
     };
 
@@ -44,8 +43,4 @@ export function fromStream<T> ( stream : Readable, chunkSize ?: number ) : Async
     } );
 
     return emitter;
-}
-
-export function fromWriteableStream<T> () {
-
 }
