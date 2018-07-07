@@ -15,7 +15,15 @@ export function fromStream<T> ( stream : NodeJS.ReadableStream, chunkSize ?: num
         }
     } );
 
-    stream.on( 'end', () => ended = true );
+    stream.on( 'end', () => {
+        ended = true;
+
+        if ( queued ) {
+            queued = false;
+
+            read();
+        }
+    } );
 
     stream.on( 'error', err => {
         emitter.exception( err );
