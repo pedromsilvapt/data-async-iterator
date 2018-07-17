@@ -15,7 +15,11 @@ export class AsyncIterableReadable<T> extends Readable {
     }
 
     _destroy ( err : any, cb : any ) {
-        this.iterator.throw( err ).then( cb, cb );
+        if ( err && this.iterator.throw ) {
+            this.iterator.throw( err ).then( cb, cb );
+        } else if ( !err && this.iterator.return ) {
+            this.iterator.return( err ).then( cb, cb );
+        }
     }
 
     _read () {
@@ -26,14 +30,18 @@ export class AsyncIterableReadable<T> extends Readable {
                 return;
             }
 
+            // Streams don't allow null values: they indicate the stream has ended
+            // So if any of the values on the iterator is a null, we just discard it and read the next one
             if ( value === null ) {
                 return this._read();
             }
 
+            // If push returns true it means that it can still take more data, so we request it right away
+            // otherwise we would wait fot _read to be called by the stream itself when needed
             if ( this.push( value ) ) {
                 this._read();
             }
-        }, err => {
+        } ).catch( err => {
             this.destroy( err );
         } );
     }
