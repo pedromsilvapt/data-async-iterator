@@ -3,7 +3,7 @@ import { Future } from "@pedromsilva/data-future";
 import { Either } from "@pedromsilva/data-either";
 import EventEmitter from 'eventemitter3';
 
-export class AsyncIterableEmitter<T> extends EventEmitter implements AsyncIterableIterator<T> {
+export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterableIterator<T> {
     protected buffer : Either<T, any>[] = [];
 
     protected queue : Future<IteratorResult<T>>[] = [];
@@ -127,6 +127,6 @@ export class AsyncIterableEmitter<T> extends EventEmitter implements AsyncIterab
     }
 }
 
-export function emits<T> () : AsyncIterableEmitter<T> {
-    return new AsyncIterableEmitter<T>();
+export function subject<T> () : AsyncIterableSubject<T> {
+    return new AsyncIterableSubject<T>();
 }

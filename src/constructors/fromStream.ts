@@ -1,7 +1,7 @@
-import { emits } from '../generators/emits';
+import { subject } from '../generators/subject';
 
 export function fromStream<T> ( stream : NodeJS.ReadableStream, chunkSize ?: number ) : AsyncIterable<T> {
-    const emitter = emits<T>();
+    const emitter = subject<T>();
 
     let queued = false;
 

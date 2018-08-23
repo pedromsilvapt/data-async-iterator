@@ -1,9 +1,9 @@
 import { AsyncIterableLike } from "./core";
-import { AsyncIterableEmitter, emits } from "./generators/emits";
+import { AsyncIterableSubject, subject } from "./generators/subject";
 import { from } from "./constructors/from";
 
 export class SharedIterable<T> implements AsyncIterable<T> {
-    emitters : Set<AsyncIterableEmitter<T>> = new Set();
+    emitters : Set<AsyncIterableSubject<T>> = new Set();
 
     autoReturn : boolean = true;
 
@@ -15,7 +15,7 @@ export class SharedIterable<T> implements AsyncIterable<T> {
         this.iterator = this.iterable[ Symbol.asyncIterator ]();
     }
 
-    protected async onBranchQueue ( emitter : AsyncIterableEmitter<T> ) {
+    protected async onBranchQueue ( emitter : AsyncIterableSubject<T> ) {
         try {
             const { done, value } = await this.iterator.next();
 
@@ -35,7 +35,7 @@ export class SharedIterable<T> implements AsyncIterable<T> {
         }
     }
 
-    protected onBranchReturn ( emitter : AsyncIterableEmitter<T> ) {
+    protected onBranchReturn ( emitter : AsyncIterableSubject<T> ) {
         this.emitters.delete( emitter );
 
         if (  this.autoReturn && this.emitters.size === 0 ) {
@@ -44,7 +44,7 @@ export class SharedIterable<T> implements AsyncIterable<T> {
     }    
 
     fork () : AsyncIterableIterator<T> {
-        const emitter = emits<T>();
+        const emitter = subject<T>();
         
         this.emitters.add( emitter );
 
