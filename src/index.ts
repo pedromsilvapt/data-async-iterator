@@ -63,6 +63,7 @@ export { safe } from './transformers/safe';
 export { scan, scanSelf } from './transformers/scan';
 
 export { shared, SharedIterable, dup, fork } from './shared';
+export { replay, AsyncIterableReplay } from './replay';
 
 export { AsyncIterableLike, isAsync, isAsyncIterable, isSync } from './core';
 

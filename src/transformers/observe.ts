@@ -34,8 +34,9 @@ export function observe<T> ( iterable : AsyncIterableLike<T>, observer : Partial
 
             return { done, value };
         },
+        
         async return ( input ?: any ) : Promise<IteratorResult<T>> {
-            const result = await iterator.return();
+            const result = iterator.return ? await iterator.return() : { done: true, value: null };
 
             if ( !hasEnded && observer.onEnd ) {
                 hasEnded = true;
@@ -44,8 +45,9 @@ export function observe<T> ( iterable : AsyncIterableLike<T>, observer : Partial
 
             return result;
         },
-        throw ( value ?: any ) : Promise<IteratorResult<T>> {
-            return iterator.throw( value );
+
+        async throw ( value ?: any ) : Promise<IteratorResult<T>> {
+            return iterator.throw ? iterator.throw( value ) : { done: true, value: null };
         }
     }
 }
