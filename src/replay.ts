@@ -1,5 +1,5 @@
 import { Future } from '@pedromsilva/data-future';
-import { resolve } from 'dns';
+import { Either } from '@pedromsilva/data-either';
 
 export class ReplayBuffer<T> {
     // Inclusive
@@ -38,7 +38,7 @@ export class ReplayBuffer<T> {
 }
 
 export class AsyncIterableReplay<T> implements AsyncIterable<T> {
-    public buffer : ReplayBuffer<T>;
+    public buffer : ReplayBuffer<Either<T, any>>;
 
     public source : AsyncIterator<T>;
 
@@ -61,19 +61,27 @@ export class AsyncIterableReplay<T> implements AsyncIterable<T> {
         // Handle cases where source rejects the promise:
         //  - the buffer needs to be a sum type (Either<T, any>) to save both errors and values
         //  - the cleanup code should be in a finally, and there should be a catch to reject the future
-        const result = await this.source.next();
+        try {
+            const result = await this.source.next();
+        
+            if ( result.done ) {
+                this.isDone = true;
+            } else {
+                this.buffer.add( Either.left( result.value ) );
+            }
 
-        this.nextValue = null;
+            nextValue.resolve( result );
+            
+            return result;
+        } catch ( error ) {
+            this.buffer.add( Either.right( error ) );
 
-        if ( result.done ) {
-            this.isDone = true;
-        } else {
-            this.buffer.add( result.value );
+            nextValue.reject( error );
+
+            throw error;
+        } finally {
+            this.nextValue = null;
         }
-
-        nextValue.resolve( result );
-
-        return result;
     }
 
     [Symbol.asyncIterator] () : AsyncIterator<T> {
@@ -86,7 +94,10 @@ export class AsyncIterableReplay<T> implements AsyncIterable<T> {
 
             // If there are any left items in the buffer, just return them and increase our index to the next item
             if ( index < this.buffer.last ) {
-                return Promise.resolve( { done: false, value: this.buffer.get( index++ ) } );
+                return this.buffer.get( index++ ).reduce<Promise<IteratorResult<T>>>( 
+                    value => Promise.resolve( { done: false, value } ),
+                    error => Promise.reject( error )
+                );
             } else {
                 // If there is nothing for us in the buffer, we still want to increase the index
                 // Otherwise when the next value comes, it is saved in the buffer for the other iterators
