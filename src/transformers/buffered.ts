@@ -12,13 +12,13 @@ export function buffered<T> ( iterable : AsyncIterableLike<T>, size : number ) :
     const cancel : CancelToken = new CancelToken();
 
     forEach( iterable, async value => {
-        emitter.value( value );
+        emitter.pushValue( value );
 
         await semaphore.acquire();
     }, cancel ).then( () => {
         emitter.end();
     } ).catch( err => {
-        emitter.exception( err );
+        emitter.pushException( err );
     } );
 
     emitter.on( 'pull', () => {

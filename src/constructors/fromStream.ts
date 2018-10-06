@@ -26,7 +26,7 @@ export function fromStream<T> ( stream : NodeJS.ReadableStream, chunkSize ?: num
     } );
 
     stream.on( 'error', err => {
-        emitter.exception( err );
+        emitter.pushException( err );
         emitter.end();
     } );
 
@@ -40,7 +40,7 @@ export function fromStream<T> ( stream : NodeJS.ReadableStream, chunkSize ?: num
                 queued = true;
             }
         } else {
-            emitter.value( result as any as T );
+            emitter.pushValue( result as any as T );
         }
     };
 

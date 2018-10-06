@@ -4,9 +4,9 @@ import { Either } from "@pedromsilva/data-either";
 import EventEmitter from 'eventemitter3';
 
 export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterableIterator<T> {
-    protected buffer : Either<T, any>[] = [];
+    protected pushBuffer : Either<T, any>[] = [];
 
-    protected queue : Future<IteratorResult<T>>[] = [];
+    protected pullQueue : Future<IteratorResult<T>>[] = [];
 
     protected pullThrottle : Semaphore;
 
@@ -15,6 +15,14 @@ export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterab
     protected ended : boolean = false;
 
     protected returned : boolean = false;
+
+    get isPulling () : boolean {
+        return this.pullQueue.length > 0;
+    }
+
+    get canPull () : boolean {
+        return this.pushBuffer.length > 0;        
+    }
 
     constructor ( throttlePulls : number = 1 ) {
         super();
@@ -25,17 +33,17 @@ export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterab
     push ( item : Either<T, any> ) {
         if ( this.ended ) return;
 
-        if ( this.queue.length ) {
+        if ( this.pullQueue.length ) {
             this.emit( 'push', item );
             this.emit( 'push-queue', item );
 
             if ( item.isLeft() ) {
-                this.queue.shift().resolve( { done: false, value: item.getLeft() } );
+                this.pullQueue.shift().resolve( { done: false, value: item.getLeft() } );
             } else {
-                this.queue.shift().reject( item.getRight() );
+                this.pullQueue.shift().reject( item.getRight() );
             }
 
-            if ( this.returned && this.queue.length == 0 ) {
+            if ( this.returned && this.pullQueue.length == 0 ) {
                 this.returnFuture.resolve();
 
                 this.returnFuture = null;
@@ -46,21 +54,21 @@ export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterab
             this.emit( 'push', item );
             this.emit( 'push-buffer', item );
 
-            this.buffer.push( item );
+            this.pushBuffer.push( item );
         }
     }
 
-    value ( value : T ) {
+    pushValue ( value : T ) {
         this.push( Either.left( value ) );
     }
 
-    exception ( exception : any ) {
+    pushException ( exception : any ) {
         this.push( Either.right( exception ) );
     }
 
     protected flush () {
-        if ( this.buffer.length == 0 ) {
-            for ( let future of this.queue ) {
+        if ( this.pushBuffer.length == 0 ) {
+            for ( let future of this.pullQueue ) {
                 future.resolve( { done: true, value: null } );
             }
         }
@@ -79,8 +87,8 @@ export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterab
     }
 
     async next ( value ?: any ) : Promise<IteratorResult<T>> {
-        if ( this.buffer.length > 0 ) {
-            const item = this.buffer.shift();
+        if ( this.pushBuffer.length > 0 ) {
+            const item = this.pushBuffer.shift();
 
             this.emit( 'pull-buffered', value, item );
             this.emit( 'pull', value, item );
@@ -98,7 +106,7 @@ export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterab
 
         const future : Future<IteratorResult<T>> = new Future();
 
-        this.queue.push( future );
+        this.pullQueue.push( future );
 
         this.emit( 'pull-queue', value );
         this.emit( 'pull', value );
@@ -111,8 +119,8 @@ export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterab
 
         this.returned = true;
 
-        if ( this.queue.length == 0 ) {
-            this.buffer = [];
+        if ( this.pullQueue.length == 0 ) {
+            this.pushBuffer = [];
 
             return { done: true, value };
         }

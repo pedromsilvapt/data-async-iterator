@@ -25,12 +25,12 @@ export class SharedIterable<T> implements AsyncIterable<T> {
                 }
             } else {
                 for ( let em of this.emitters ) {
-                    em.value( value );
+                    em.pushValue( value );
                 }
             }
         } catch ( error ) {
             for ( let em of this.emitters ) {
-                em.exception( error );
+                em.pushException( error );
             }
         }
     }

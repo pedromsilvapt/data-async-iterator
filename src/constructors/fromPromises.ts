@@ -46,7 +46,7 @@ export function fromPromises <T> ( promises : Iterable<Promise<T>>, sequential :
                 }
             }
         } catch ( error ) {
-            emitter.exception( error );
+            emitter.pushException( error );
 
             next();
         }
