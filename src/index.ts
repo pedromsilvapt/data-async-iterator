@@ -10,7 +10,6 @@ export { zip, ZipMode } from './combinators/zip';
 export { from, fromPromise, fromSync } from './constructors/from';
 export { fromArray } from './constructors/fromArray';
 export { fromPromises } from './constructors/fromPromises';
-export { fromStream } from './constructors/fromStream';
 
 export { subject, AsyncIterableSubject } from './generators/subject';
 export { range } from './generators/range';
@@ -37,7 +36,6 @@ export { reduce } from './reducers/reduce';
 export { toArray } from './reducers/toArray';
 export { toMap } from './reducers/toMap';
 export { toSet } from './reducers/toSet';
-export { toStream, AsyncIterableReadable } from './reducers/toStream';
 
 export { liveUntil } from './retimers/liveUntil';
 export { debounce } from './retimers/debounce';
