@@ -1,27 +1,55 @@
-import { AsyncIterableLike } from "../core";
+import { AsyncIterableLike, toAsyncIterator } from "../core";
 import { Future } from "@pedromsilva/data-future";
-import { from } from "../constructors/from";
+import { safe } from "../transformers/safe";
 
-export async function * throttle<T> ( iterable : AsyncIterableLike<T>, interval : number ) : AsyncIterableIterator<T> {
-    let delayed : Future<void>;
+export function throttle<T> ( iterable : AsyncIterableLike<T>, interval : number ) : AsyncIterable<T> {
+    return safe( {
+        [ Symbol.asyncIterator ] () {
+            const iterator = toAsyncIterator( iterable );
 
-    const wait = () => {
-        delayed = new Future();
+            let delayed : Future<void>;
 
-        setTimeout( () => {
-            delayed.resolve();
+            const wait = () => {
+                delayed = new Future();
+        
+                setTimeout( () => {
+                    delayed.resolve();
+        
+                    delayed = null;
+                }, interval );
+            };
 
-            delayed = null;
-        }, interval );
-    };
+            return {
+                [ Symbol.asyncIterator ] () {
+                    return this;
+                },
 
-    for await ( let value of from( iterable ) ) {
-        if ( delayed ) {
-            await delayed.promise;
+                async next ( input ?: any ) : Promise<IteratorResult<T>> {
+                    if ( delayed ) {
+                        await delayed.promise;
+                    }
+            
+                    wait();
+            
+                    return iterator.next( input );
+                },
+
+                throw ( reason ?: any ) : Promise<IteratorResult<T>> {
+                    if ( iterator.throw ) {
+                        return iterator.throw( reason );
+                    } else {
+                        return Promise.reject( reason );
+                    }
+                },
+
+                return ( value ?: any ) : Promise<IteratorResult<T>> {
+                    if ( iterator.return ) {
+                        return iterator.return( value );
+                    } else {
+                        return Promise.resolve( { done: true, value } );
+                    }
+                }
+            };
         }
-
-        wait();
-
-        yield value;
-    }
+    } );
 }

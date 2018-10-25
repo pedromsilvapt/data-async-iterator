@@ -1,42 +1,117 @@
-import { AsyncIterableLike } from "../core";
+import { AsyncIterableLike, toAsyncIterator } from "../core";
 import { slice } from "./slice";
-import { from } from "../constructors/from";
-import { fromArray } from "../constructors/fromArray";
+import { safe } from "../transformers/safe";
 
-export async function * drop<T> ( iterable : AsyncIterableLike<T>, count : number ) : AsyncIterableIterator<T> {
-    for await ( let item of from( iterable ) ) {
-        if ( count > 0 ) {
-            count--;
+export function drop<T> ( iterable : AsyncIterableLike<T>, count : number, countErrors : boolean = false ) : AsyncIterable<T> {
+    return safe( {
+        [ Symbol.asyncIterator ] () {
+            const iterator = toAsyncIterator( iterable );
 
-            continue;
+            let remaining = count;
+
+            return {
+                [ Symbol.asyncIterator ] () {
+                    return this;
+                },
+
+                async next ( input : any ) : Promise<IteratorResult<T>> {
+                    while ( remaining > 0 ) {
+                        try {
+                            const { done } = await iterator.next( input );
+    
+                            if ( done ) {
+                                return { done: true, value: void 0 };
+                            }
+
+                            remaining--;
+                        } catch ( err ) {
+                            if ( countErrors ) {
+                                remaining--;
+                            } else {
+                                throw err;
+                            }
+                        }
+                    }
+
+                    return iterator.next( input );
+                },
+
+                throw ( reason ?: any ) : Promise<IteratorResult<T>> {
+                    if ( iterator.throw ) {
+                        return iterator.throw( reason );
+                    } else {
+                        return Promise.reject( reason );
+                    }
+                },
+
+                return ( value ?: any ) : Promise<IteratorResult<T>> {
+                    if ( iterator.return ) {
+                        return iterator.return( value );
+                    } else {
+                        return Promise.resolve( { done: true, value } );
+                    }
+                }
+            }
         }
-
-        yield item;
-    }
+    } );
 }
 
-export async function * dropWhile<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterableIterator<T> {
-    let index = 0;
+export function dropWhile<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterable<T> {
+    return {
+        [ Symbol.asyncIterator ] () {
+            const iterator = toAsyncIterator( iterable );
+            
+            let switched : boolean = false;
+            
+            let index = 0;
 
-    let switched : boolean = false;
+            return {
+                [ Symbol.asyncIterator ] () {
+                    return this;
+                },
 
-    for await ( let item of from( iterable ) ) {
-        if ( !switched && await predicate( item, index ) ) {
-            continue;
+                async next ( input ?: any ) : Promise<IteratorResult<T>> {
+                    while ( !switched ) {
+                        const { done, value } = await iterator.next( input );
+
+                        if ( done ) {
+                            return { done: true, value: void 0 };
+                        }
+
+                        switched = !await predicate( value, index++ );
+
+                        if ( switched ) {
+                            return { done, value };
+                        }
+                    }
+
+                    return iterator.next( input );
+                },
+
+                throw ( reason ?: any ) : Promise<IteratorResult<T>> {
+                    if ( iterator.throw ) {
+                        return iterator.throw( reason );
+                    } else {
+                        return Promise.reject( reason );
+                    }
+                },
+
+                return ( value ?: any ) : Promise<IteratorResult<T>> {
+                    if ( iterator.return ) {
+                        return iterator.return( value );
+                    } else {
+                        return Promise.resolve( { done: true, value } );
+                    }
+                }
+            }
         }
-
-        switched = true;
-
-        yield item;
-        
-        index++;
-    }
+    };
 }
 
-export function dropUntil<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterableIterator<T> {
+export function dropUntil<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterable<T> {
     return dropWhile( iterable, async ( item, index ) => !await predicate( item, index ) );
 }
 
-export function dropLast<T> ( iterable : AsyncIterableLike<T>, count : number ) : AsyncIterableIterator<T> {
+export function dropLast<T> ( iterable : AsyncIterableLike<T>, count : number ) : AsyncIterable<T> {
     return slice( iterable, 0, - count );
 }

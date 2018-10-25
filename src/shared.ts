@@ -1,6 +1,5 @@
-import { AsyncIterableLike } from "./core";
+import { AsyncIterableLike, toAsyncIterable, toAsyncIterator } from "./core";
 import { AsyncIterableSubject, subject } from "./generators/subject";
-import { from } from "./constructors/from";
 
 export class SharedIterable<T> implements AsyncIterable<T> {
     emitters : Set<AsyncIterableSubject<T>> = new Set();
@@ -11,8 +10,8 @@ export class SharedIterable<T> implements AsyncIterable<T> {
     protected iterator : AsyncIterator<T>;
 
     constructor ( iterable : AsyncIterableLike<T> ) {
-        this.iterable = from( iterable );
-        this.iterator = this.iterable[ Symbol.asyncIterator ]();
+        this.iterable = toAsyncIterable( iterable );
+        this.iterator = toAsyncIterator( this.iterable );
     }
 
     protected async onBranchQueue ( emitter : AsyncIterableSubject<T> ) {

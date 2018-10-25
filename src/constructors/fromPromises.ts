@@ -1,14 +1,18 @@
 import { subject } from "../generators/subject";
 import { Either } from "@pedromsilva/data-either";
 
-export function fromPromises <T> ( promises : Iterable<Promise<T>>, sequential : boolean = false ) : AsyncIterableIterator<T> {
+export function fromPromises <T> ( promises : Promise<T>[], sequential : boolean = false ) : AsyncIterableIterator<T> {
     const emitter = subject<T>();
 
     // Counts how many promises are still unresolved. Useful to know when to end the emitter,
     // especially when emitting non sequentially (in parallel)
     let missing = 0;
 
-    const iterator : Iterator<Promise<T>> = promises[ Symbol.iterator ]();
+    const iterator : Iterator<Promise<Either<T, any>>> = promises.map( value => {
+        return value
+            .then( value => Either.left<T, any>( value ) )
+            .catch( error => Either.right<T, any>( error ) );
+    } )[ Symbol.iterator ]();
 
     const push = ( value : Either<T, any> ) => {
         emitter.push( value );
@@ -31,8 +35,7 @@ export function fromPromises <T> ( promises : Iterable<Promise<T>>, sequential :
             if ( !done ) {
                 missing++;
 
-                value.then( value => push( Either.left( value ) ) );
-                value.catch( error => push( Either.right( error ) ) );
+                value.then( value => push( value ) )
 
                 // If not sequential, we don't need to wait for the current promise to resolve
                 // to listen to the next one, so we just call next right away

@@ -1,10 +1,10 @@
 {
   "name": "data-async-iterators",
-  "version": "0.7.2",
-  "description": "Utility functions to work with async iterables available in ES2018/TypeScript",
+  "version": "1.0.0",
+  "description": "Batteries-included utility functions to work with async iterables available in ES2018/TypeScript",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
-  "repository": "pedromsilvapt/data-async-iterators",
+  "repository": "pedromsilvapt/data-async-iterator",
   "keywords": [
     "js",
     "future",
@@ -19,7 +19,7 @@
     "pull"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "blue-tape ./lib/**/*.test.js | tap-dot"
   },
   "author": "Pedro M. Silva <pemiolsi@hotmail.com>",
   "license": "ISC",
@@ -32,6 +32,10 @@
     "eventemitter3": "^3.0.1"
   },
   "devDependencies": {
-    "@types/node": "^8.10.11"
+    "@types/blue-tape": "^0.1.32",
+    "@types/node": "^8.10.11",
+    "blue-tape": "^1.0.0",
+    "tap-dot": "^2.0.0",
+    "tape": "^4.9.1"
   }
 }

@@ -1,27 +1,52 @@
-import { AsyncIterableLike } from "../core";
+import { AsyncIterableLike, toAsyncIterator } from "../core";
 import { Mutex } from "data-semaphore";
-import { from } from "../constructors/from";
 
-export function safe<T> ( iterable : AsyncIterableLike<T> ) : AsyncIterableIterator<T> {
-    const mutex = new Mutex();
-
-    const iterator = from( iterable )[ Symbol.asyncIterator ]();
-    
+export function safe<T> ( iterable : AsyncIterableLike<T> ) : AsyncIterable<T> {
     return {
         [ Symbol.asyncIterator ] () {
-            return this;
-        },
-
-        async next ( input ?: any ) : Promise<IteratorResult<T>> {
-            return mutex.use( () => iterator.next( input ) );
-        },
+            const mutex = new Mutex();
+    
+            const iterator = toAsyncIterator( iterable );
+            
+            let returned = false;
+            
+            return {
+                [ Symbol.asyncIterator ] () {
+                    return this;
+                },
         
-        async return ( input ?: any ) : Promise<IteratorResult<T>> {
-            return mutex.use( () => iterator.return ? iterator.return( input ) : null );
-        },
+                next ( input ?: any ) : Promise<IteratorResult<T>> {
+                    return mutex.use( () =>{
+                        if ( returned ) {
+                            return { done: true, value: void 0 };
+                        }
 
-        async throw ( input ?: any ) : Promise<IteratorResult<T>> {
-            return mutex.use( () => iterator.throw ? iterator.throw( input ) : null );
+                        return iterator.next( input )
+                    } );
+                },
+                
+                return ( input ?: any ) : Promise<IteratorResult<T>> {
+                    return mutex.use( () => {
+                        returned = true;
+        
+                        if ( iterator.return ) {
+                            return iterator.return( input );
+                        } else {
+                            return { done: true, value: input };
+                        }
+                    } );
+                },
+        
+                throw ( input ?: any ) : Promise<IteratorResult<T>> {
+                    return mutex.use( () => {
+                        if ( iterator.throw ) {
+                            return iterator.throw( input );
+                        } else {
+                            return Promise.reject( input );
+                        }
+                    } );
+                }
+            }
         }
-    }
+    };
 }

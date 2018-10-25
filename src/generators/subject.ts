@@ -115,12 +115,16 @@ export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterab
     }
 
     async return ( value ?: any ) : Promise<IteratorResult<T>> {
-        if ( !this.returned ) this.emit( 'return' );
+        const returned = this.returned;
+
+        if ( !returned ) this.emit( 'return' );
 
         this.returned = true;
 
         if ( this.pullQueue.length == 0 ) {
             this.pushBuffer = [];
+
+            this.emit( 'returned' );
 
             return { done: true, value };
         }
@@ -130,6 +134,8 @@ export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterab
         }
         
         await this.returnFuture.promise;
+
+        if ( !returned ) this.emit( 'returned' );
 
         return { done: true, value };
     }

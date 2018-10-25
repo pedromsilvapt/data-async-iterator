@@ -1,29 +1,53 @@
-import { AsyncIterableLike } from "../core";
-import { from } from "../constructors/from";
+import { AsyncIterableLike, toAsyncIterator } from "../core";
+import { safe } from "./safe";
 
-export async function * filter<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterableIterator<T> {
-    let result : boolean | Promise<boolean>;
+export function filter<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> | Promise<never> ) : AsyncIterable<T> {
+    return safe( {
+        [ Symbol.asyncIterator ] () {
+            let index = 0;
 
-    let index = 0;
+            const iterator = toAsyncIterator( iterable );
+            
+            return {
+                [ Symbol.asyncIterator ] () {
+                    return this;
+                },
 
-    for await ( let item of from( iterable ) ) {
-        result = predicate( item, index );
+                next ( input : any ) : Promise<IteratorResult<T>> {
+                    return iterator.next( input ).then( result => {
+                        if ( result.done ) {
+                            return result;
+                        }
+                        
+                        return Promise.resolve( predicate( result.value, index++ ) ).then( value => {
+                            if ( !value ) return this.next( input );
 
-        if ( result instanceof Promise ) {
-            if ( await result ) {
-                yield item;
-            }
-        } else {
-            if ( result ) {
-                yield item;
-            }
+                            return result;
+                        } );
+                    } );
+                },
+                
+                return ( input ?: any ) : Promise<IteratorResult<T>> {
+                    if ( iterator.return ) {
+                        return iterator.return( input ) as Promise<IteratorResult<unknown>> as Promise<IteratorResult<T>>;
+                    } else {
+                        return Promise.resolve( { done: true, value: input } );
+                    }
+                },
+        
+                throw ( input ?: any ) : Promise<IteratorResult<T>> {
+                    if ( iterator.throw ) {
+                        return iterator.throw( input ) as Promise<IteratorResult<unknown>> as Promise<IteratorResult<T>>;;
+                    } else {
+                        return Promise.reject( input );
+                    }
+                }
+            };
         }
-
-        index++;
-    }
+    } );
 }
 
-export function reject<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterableIterator<T> {
+export function reject<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterable<T> {
     return filter( iterable, ( item, index ) => {
         let result : boolean | Promise<boolean> = predicate( item, index );
         

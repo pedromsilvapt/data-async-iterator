@@ -15,7 +15,7 @@ export async function some<T> ( iterable : AsyncIterableLike<T>, predicate : ( i
                 return true;
             }
         } else {
-            if ( !result ) {
+            if ( result ) {
                 return true;
             }
         }

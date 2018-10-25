@@ -1,13 +1,12 @@
 import { AsyncIterableLike, isSync } from "../core";
 import { Semaphore, SemaphoreLike, StackedSemaphore, SemaphoreRelease } from "data-semaphore";
-import { from } from "../constructors/from";
 import { valve } from "./valve";
 import { observe } from "../transformers/observe";
 import { map } from "../transformers/map";
 
-export function synchronize<T> ( iterables : Iterable<AsyncIterableLike<T>>, lag ?: number ) : AsyncIterableIterator<T>[];
-export function synchronize<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>>, lag ?: number ) : AsyncIterableIterator<AsyncIterableIterator<T>>;
-export function synchronize<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>> | Iterable<AsyncIterableLike<T>>, lag : number = 0 ) : AsyncIterableIterator<T>[] | AsyncIterableIterator<AsyncIterableIterator<T>> {
+export function synchronize<T> ( iterables : Iterable<AsyncIterableLike<T>>, lag ?: number ) : AsyncIterable<T>[];
+export function synchronize<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>>, lag ?: number ) : AsyncIterable<AsyncIterable<T>>;
+export function synchronize<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>> | Iterable<AsyncIterableLike<T>>, lag : number = 0 ) : AsyncIterable<T>[] | AsyncIterable<AsyncIterable<T>> {
     const barrier = new Barrier( 0, lag );
     
     const each = ( iterator : AsyncIterableLike<T>, semaphore : BarrierSemaphore ) => {

@@ -1,8 +1,6 @@
 import { Readable } from "stream";
-import { forEach } from "./forEach";
-import { AsyncIterableLike } from "../core";
+import { AsyncIterableLike, toAsyncIterator } from "../core";
 import { CancelToken } from "data-cancel-token";
-import { from } from "../constructors/from";
 import { cancellable } from "../transformers/cancellable";
 
 export class AsyncIterableReadable<T> extends Readable {
@@ -48,5 +46,5 @@ export class AsyncIterableReadable<T> extends Readable {
 }
 
 export function toStream<T> ( iterable : AsyncIterableLike<T>, cancel ?: CancelToken ) : NodeJS.ReadableStream {
-    return new AsyncIterableReadable<T>( cancellable( from( iterable ), cancel )[ Symbol.asyncIterator ]() );
+    return new AsyncIterableReadable<T>( toAsyncIterator( cancellable( iterable, cancel ) ) );
 }

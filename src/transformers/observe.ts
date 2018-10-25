@@ -1,5 +1,4 @@
-import { AsyncIterableLike } from "../core";
-import { from } from "../constructors/from";
+import { AsyncIterableLike, toAsyncIterator } from "../core";
 
 export enum ObserverEndReason {
     End = 'end',
@@ -7,52 +6,69 @@ export enum ObserverEndReason {
 }
 
 export interface Observer<T> {
-    onValue : ( value : T ) => any;
-    onEnd : ( reason : ObserverEndReason ) => any;
-    onError : ( error : any ) => any;
+    onValue : ( value : T, index : number ) => Promise<any> | any;
+    onEnd : ( reason : ObserverEndReason ) => Promise<any> | any;
+    onError : ( error : any ) => Promise<any> | any;
 }
 
-export function observe<T> ( iterable : AsyncIterableLike<T>, observer : Partial<Observer<T>> ) : AsyncIterableIterator<T> {
-    const iterator = from( iterable )[ Symbol.asyncIterator ]();
-
-    let hasEnded : boolean = false;
-
+export function observe<T> ( iterable : AsyncIterableLike<T>, observer : Partial<Observer<T>> ) : AsyncIterable<T> {
     return {
         [ Symbol.asyncIterator ] () {
-            return this;
-        },
-        async next ( input ?: any ) : Promise<IteratorResult<T>> {
-            const { done, value } = await iterator.next( input );
+            const iterator = toAsyncIterator( iterable );
 
-            if ( done && observer.onEnd && !hasEnded ) {
-                hasEnded = true;
+            let hasEnded : boolean = false;
 
-                observer.onEnd( ObserverEndReason.End );
-            } else if ( !done && observer.onValue ) {
-                observer.onValue( value );
-            }
+            let index = 0;
 
-            return { done, value };
-        },
+            return {
+                [ Symbol.asyncIterator ] () {
+                    return this;
+                },
+
+                async next ( input ?: any ) : Promise<IteratorResult<T>> {
+                    try {
+                        const { done, value } = await iterator.next( input );
+            
+                        if ( done && observer.onEnd && !hasEnded ) {
+                            hasEnded = true;
+            
+                            await observer.onEnd( ObserverEndReason.End );
+                        } else if ( !done && observer.onValue ) {
+                            await observer.onValue( value, index++ );
+                        }
+            
+                        return { done, value };
+                    } catch ( error ) {
+                        await observer.onError( error );
+
+                        throw error;
+                    }
+                },
+                
+                async return ( input ?: any ) : Promise<IteratorResult<T>> {
+                    const result = iterator.return ? await iterator.return( input ) : { done: true, value: input };
         
-        async return ( input ?: any ) : Promise<IteratorResult<T>> {
-            const result = iterator.return ? await iterator.return() : { done: true, value: null };
-
-            if ( !hasEnded && observer.onEnd ) {
-                hasEnded = true;
-                observer.onEnd( ObserverEndReason.Return );
-            }
-
-            return result;
-        },
-
-        async throw ( value ?: any ) : Promise<IteratorResult<T>> {
-            return iterator.throw ? iterator.throw( value ) : { done: true, value: null };
+                    if ( !hasEnded && observer.onEnd ) {
+                        hasEnded = true;
+                        observer.onEnd( ObserverEndReason.Return );
+                    }
+        
+                    return result;
+                },
+        
+                throw ( value ?: any ) : Promise<IteratorResult<T>> {
+                    if ( iterator.throw ) {
+                        return iterator.throw( value );
+                    } else {
+                        return Promise.reject( value );
+                    }
+                }
+            };
         }
     }
 }
 
-export function log<T> ( iterables : AsyncIterableLike<T>, label : string = 'iterable' ) : AsyncIterableIterator<T> {
+export function log<T> ( iterables : AsyncIterableLike<T>, label : string = 'iterable' ) : AsyncIterable<T> {
     const write = ( kind : string, hasData : boolean, data ?: any ) => {
         console.log( `[${ label }] <${ kind }>`, hasData ? data : '' );
     };

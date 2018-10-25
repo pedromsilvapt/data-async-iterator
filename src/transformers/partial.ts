@@ -26,7 +26,7 @@ export function partial<T> ( iter : AsyncIterator<T> ) : AsyncIterableIterator<T
             if ( iter.throw ) {
                 return iter.throw( err );
             } else {
-                return Promise.resolve( err );
+                return Promise.reject( err );
             }
         }
     }

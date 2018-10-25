@@ -7,7 +7,6 @@ export { flatMap, flatMapConcurrent, flatten, flatMapLast, flattenConcurrent, fl
 export { merge } from './combinators/merge';
 export { zip, ZipMode } from './combinators/zip';
 
-export { from, fromPromise, fromSync } from './constructors/from';
 export { fromArray } from './constructors/fromArray';
 export { fromPromises } from './constructors/fromPromises';
 
@@ -24,7 +23,7 @@ export { pick } from './queries/pick';
 export { some } from './queries/some';
 export { tap } from './queries/tap';
 
-
+export { consume } from './reducers/consume';
 export { drain } from './reducers/drain';
 export { forEach } from './reducers/forEach';
 export { groupBy } from './reducers/groupBy';
@@ -60,9 +59,15 @@ export { observe, log } from './transformers/observe';
 export { safe } from './transformers/safe';
 export { scan, scanSelf } from './transformers/scan';
 
+export { mapErrors } from './errors/mapErrors';
+export { filterErrors } from './errors/filterErrors';
+export { skipErrors } from './errors/skipErrors';
+export { takeErrors } from './errors/takeErrors';
+export { ErrorMatcher, takeUntilErrors } from './errors/takeUntilErrors';
+
 export { shared, SharedIterable, dup, fork } from './shared';
 export { replay, AsyncIterableReplay } from './replay';
 
-export { AsyncIterableLike, isAsync, isAsyncIterable, isSync } from './core';
+export { AsyncIterableLike, isAsync, isAsyncIterable, isSync, from, fromPromise, fromSync } from './core';
 
 export { CancelToken } from 'data-cancel-token';
