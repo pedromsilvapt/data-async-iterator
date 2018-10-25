@@ -5,7 +5,6 @@ if ( !Symbol.asyncIterator ) {
 export { concat } from './combinators/concat';
 export { flatMap, flatMapConcurrent, flatten, flatMapLast, flattenConcurrent, flattenLast } from './combinators/flatMap';
 export { merge } from './combinators/merge';
-export { zip, ZipMode } from './combinators/zip';
 
 export { fromArray } from './constructors/fromArray';
 export { fromPromises } from './constructors/fromPromises';

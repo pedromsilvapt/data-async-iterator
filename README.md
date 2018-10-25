@@ -1,6 +1,6 @@
 # Async Iterator
 
-> Utility functions to work with async iterables as available in ES2018/TypeScript
+> Batteries-included utility functions to work with async iterables as available in ES2018/TypeScript
 
 # Installation
 ```shell
