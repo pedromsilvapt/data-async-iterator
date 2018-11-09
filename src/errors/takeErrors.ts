@@ -1,9 +1,9 @@
 import { AsyncIterableLike, toAsyncIterator } from "../core";
 import { safe } from "../transformers/safe";
 
-export function takeErrors<I> ( iterable : AsyncIterableLike<I> ) : AsyncIterable<I> {
+export function takeErrors<E = any> ( iterable : AsyncIterableLike<any> ) : AsyncIterable<E> {
     return safe( {
-        [ Symbol.asyncIterator ] () : AsyncIterableIterator<I> {
+        [ Symbol.asyncIterator ] () : AsyncIterableIterator<E> {
             const iterator = toAsyncIterator( iterable );
             
             return {
@@ -11,25 +11,27 @@ export function takeErrors<I> ( iterable : AsyncIterableLike<I> ) : AsyncIterabl
                     return this;
                 },
 
-                next ( input : any ) : Promise<IteratorResult<I>> {
+                next ( input : any ) : Promise<IteratorResult<E>> {
                     return iterator.next( input ).then( result => {
                         if ( result.done ) return result;
 
                         return this.next( input );
+                    }, err => {
+                        return { done: false, value: err as E };
                     } );
                 },
 
-                throw ( reason : any ) : Promise<IteratorResult<I>> {
+                throw ( reason : any ) : Promise<IteratorResult<E>> {
                     if ( iterator.throw ) {
-                        return iterator.throw( reason ) as Promise<IteratorResult<unknown>> as Promise<IteratorResult<I>>;
+                        return iterator.throw( reason ) as Promise<IteratorResult<unknown>> as Promise<IteratorResult<E>>;
                     } else {
                         return Promise.reject( reason );
                     }
                 },
 
-                return ( value : any ) : Promise<IteratorResult<I>> {
+                return ( value : any ) : Promise<IteratorResult<E>> {
                     if ( iterator.return ) {
-                        return iterator.return( value ) as Promise<IteratorResult<unknown>> as Promise<IteratorResult<I>>
+                        return iterator.return( value ) as Promise<IteratorResult<unknown>> as Promise<IteratorResult<E>>
                     } else {
                         return Promise.resolve( { done: true, value } );
                     }

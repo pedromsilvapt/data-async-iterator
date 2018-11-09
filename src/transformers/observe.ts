@@ -29,29 +29,37 @@ export function observe<T> ( iterable : AsyncIterableLike<T>, observer : Partial
                     try {
                         const { done, value } = await iterator.next( input );
             
-                        if ( done && observer.onEnd && !hasEnded ) {
+                        if ( done && !hasEnded ) {
                             hasEnded = true;
-            
-                            await observer.onEnd( ObserverEndReason.End );
+                            
+                            if ( observer.onEnd ) {
+                                await observer.onEnd( ObserverEndReason.End );
+                            }
                         } else if ( !done && observer.onValue ) {
                             await observer.onValue( value, index++ );
                         }
             
                         return { done, value };
                     } catch ( error ) {
-                        await observer.onError( error );
-
-                        throw error;
+                        if ( observer.onError ) {
+                            await observer.onError( error );
+                        } else {
+                            throw error;
+                        }
                     }
                 },
                 
                 async return ( input ?: any ) : Promise<IteratorResult<T>> {
                     const result = iterator.return ? await iterator.return( input ) : { done: true, value: input };
         
-                    if ( !hasEnded && observer.onEnd ) {
+                    if ( !hasEnded ) {
                         hasEnded = true;
-                        observer.onEnd( ObserverEndReason.Return );
+
+                        if ( observer.onEnd ) {
+                            observer.onEnd( ObserverEndReason.Return );
+                        }
                     }
+
         
                     return result;
                 },

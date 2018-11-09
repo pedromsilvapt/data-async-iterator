@@ -5,7 +5,7 @@ import { Either } from "@pedromsilva/data-either";
 import { AsyncIterableLike, toAsyncIterable, toAsyncIterator, toAsyncIterableIterator } from "./core";
 
 import { map } from "./transformers/map";
-import { filter } from "./transformers/filter";
+import { filter, reject } from "./transformers/filter";
 import { distinct } from "./transformers/distinct";
 import { IterablePackage, describe } from "./transformers/describe";
 import { cancellable } from "./transformers/cancellable";
@@ -57,6 +57,7 @@ import { filterErrors } from "./errors/filterErrors";
 import { mapEither } from "./errors/mapEither";
 import { mapErrors } from "./errors/mapErrors";
 import { skipErrors } from "./errors/skipErrors";
+import { skipValues } from "./errors/skipValues";
 import { splitErrors } from "./errors/splitErrors";
 import { takeErrors } from "./errors/takeErrors";
 import { ErrorMatcher, takeUntilErrors } from "./errors/takeUntilErrors";
@@ -190,7 +191,11 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( skipErrors( this.iterable ) );
     }
 
-    spliErrors<E = any> () : [ AsyncStream<E>, AsyncStream<T> ] {
+    skipValues () : AsyncStream<any> {
+        return new AsyncStream( skipValues( this.iterable ) );
+    }
+
+    splitErrors<E = any> () : [ AsyncStream<E>, AsyncStream<T> ] {
         const [ errors, values ] = splitErrors<T, E>(  this.iterable );
 
         return [ new AsyncStream( errors ), new AsyncStream( values ) ];
@@ -404,6 +409,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
 
     filter ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> | Promise<never> ) {
         return new AsyncStream( filter( this.iterable, predicate ) );
+    }
+
+    reject ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> | Promise<never> ) {
+        return new AsyncStream( reject( this.iterable, predicate ) );
     }
 
     distinct () : AsyncStream<T> {
