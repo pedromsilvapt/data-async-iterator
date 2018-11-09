@@ -1,5 +1,4 @@
 import { AsyncIterableLike } from "../core";
-import { Optional } from "data-optional";
 import { reduce } from "../reducers/reduce";
 import { CancelToken } from "data-cancel-token";
 

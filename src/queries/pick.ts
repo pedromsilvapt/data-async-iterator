@@ -1,7 +1,6 @@
 import { AsyncIterableLike } from "../core";
 import { Optional } from "data-optional";
 import { CancelToken } from "data-cancel-token";
-import { cancellable } from "../transformers/cancellable";
 import { first } from "./first";
 import { filter } from "../transformers/filter";
 

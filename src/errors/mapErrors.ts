@@ -2,7 +2,7 @@ import { AsyncIterableLike, toAsyncIterator } from "../core";
 import { safe } from "../transformers/safe";
 
 export function mapErrors<I> ( iterable : AsyncIterableLike<I>, mapper : ( err : any, index : number ) => I | Promise<I> | Promise<never>, keepErrors ?: false ) : AsyncIterable<I>;
-export function mapErrors<I> ( iterable : AsyncIterableLike<I>, mapper : ( err : any, index : number ) => any | Promise<any> | Promise<never>, keepErrors : true ) : AsyncIterable<I>;
+export function mapErrors<I> ( iterable : AsyncIterableLike<I>, mapper : ( err : any, index : number ) => any | Promise<any> | Promise<never>, keepErrors : true | boolean ) : AsyncIterable<I>;
 export function mapErrors<I> ( iterable : AsyncIterableLike<I>, mapper : ( err : any, index : number ) => I | Promise<I> | Promise<never>, keepErrors : boolean = false ) : AsyncIterable<I> {
     return safe( {
         [ Symbol.asyncIterator ] () : AsyncIterableIterator<I> {

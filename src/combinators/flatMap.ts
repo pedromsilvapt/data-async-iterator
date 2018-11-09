@@ -15,8 +15,8 @@ export function flatMapLast<T, U> ( iterables : AsyncIterableLike<T>, mapper : (
     return flattenLast( map<T, AsyncIterableLike<U>>( iterables, mapper ), concurrency );
 }
 
-export function flatMapConcurrent<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, concurrency : number ) : AsyncIterable<U> {
-    return flattenConcurrent( map<T, AsyncIterableLike<U>>( iterables, mapper ), concurrency );
+export function flatMapConcurrent<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, concurrency : number, switchFast : boolean = false ) : AsyncIterable<U> {
+    return flattenConcurrent( map<T, AsyncIterableLike<U>>( iterables, mapper ), concurrency, switchFast );
 }
 
 export function flatten<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>> ) : AsyncIterable<T> {
