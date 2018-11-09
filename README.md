@@ -37,7 +37,7 @@ forEach( source, res => console.log( res ) );
 
 Or maybe a more pratical example
 ```typescript
-import { merge, map, forEach } from 'data-async-iterator';
+import { merge, map, forEach } from 'data-async-iterators';
 
 function findDevices () : AsyncIterable<Device> { /* ... */ };
 
@@ -55,3 +55,30 @@ const statuses : AsyncIterable<DeviceStatus> = merge( map( devices, connectDevic
 forEach( statuses, processStatus );
 ```
 
+Sometimes chaining functions in this way is not very readable, and therefore this package provides a utility class called `AsyncStream` that is a simple wraper around an iterable with all the operators as methods.
+
+```typescript
+import { AsyncStream } from 'data-async-iterators';
+
+const stream = AsyncStream.range( 1, 10 )
+    // Delay each number by 100 milliseconds
+    .delay( 100 )
+    // Double each number
+    .map( v => v * 2 )
+    // For each n number, generate n repetitions
+    .flatMap( v => AsyncStream.repeat( v, v ) )
+    // Ignore the first and last ten numbers
+    .slice( 10, -10 );
+
+// Since AsyncStream is a regular iterable, we can
+for await ( let number of stream ) {
+    console.log( number );
+}
+
+// Or
+stream.forEach( number => console.log( number ) );
+
+// To convert any regular AsyncIterable (or promises, regular iterables, arrays, etc...)
+// into an AsyncStream just do:
+const stream = new AsyncStream( iterable );
+```
