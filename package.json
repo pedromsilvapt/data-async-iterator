@@ -19,7 +19,7 @@
     "pull"
   ],
   "scripts": {
-    "test": "blue-tape ./lib/**/*.test.js | tap-dot"
+    "test": "blue-tape -r ./lib/polyfill.js ./lib/**/*.test.js | tap-dot"
   },
   "author": "Pedro M. Silva <pemiolsi@hotmail.com>",
   "license": "ISC",

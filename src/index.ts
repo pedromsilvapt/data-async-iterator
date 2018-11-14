@@ -1,6 +1,4 @@
-if ( !Symbol.asyncIterator ) {
-    ( Symbol as any ).asyncIterator = Symbol( 'asyncIterator' );
-}
+import './polyfill';
 
 export { concat } from './combinators/concat';
 export { flatMap, flatMapConcurrent, flatten, flatMapLast, flattenConcurrent, flattenLast } from './combinators/flatMap';
