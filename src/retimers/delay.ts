@@ -6,10 +6,10 @@ export function delay<T> ( iterable : AsyncIterableLike<T>, timestamp : number |
         ? () => new Promise( resolve => setTimeout( resolve, timestamp ) )
         : timestamp;
 
-    const iterator = toAsyncIterator( iterable );
-
     return safe( {
         [ Symbol.asyncIterator ] () {
+            const iterator = toAsyncIterator( iterable );
+            
             return {
                 [ Symbol.asyncIterator ] () {
                     return this;

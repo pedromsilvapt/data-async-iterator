@@ -1,5 +1,11 @@
-export async function * fromArray<T> ( array : T[] | Promise<T[]> ) : AsyncIterableIterator<T> {
-    array = await array;
+import { safe } from "../transformers/safe";
 
-    yield * array;
+export function fromArray<T> ( array : T[] | Promise<T[]> ) : AsyncIterable<T> {
+    return safe( {
+        async * [Symbol.asyncIterator] () {
+            array = await array;
+
+            yield * array;
+        }
+    } );
 }

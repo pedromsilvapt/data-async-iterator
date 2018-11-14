@@ -8,6 +8,6 @@ test( 'throw only errors and ignore values', async t => {
 
     const iterator = iterable[ Symbol.asyncIterator ]();
 
-    await t.shouldFail( iterator.next(), 'takeErrors' );
+    t.deepLooseEqual( await iterator.next(), { done: false, value: new Error( 'takeErrors' ) } );
     t.deepLooseEqual( await iterator.next(), { done: true, value: void 0 } );
 } );
