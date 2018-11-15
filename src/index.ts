@@ -63,8 +63,9 @@ export { skipErrors } from './errors/skipErrors';
 export { takeErrors } from './errors/takeErrors';
 export { ErrorMatcher, takeUntilErrors } from './errors/takeUntilErrors';
 
-export { shared, SharedIterable, dup, fork } from './shared';
-export { replay, AsyncIterableReplay } from './replay';
+export { shared, SharedNetwork, dup, fork } from './misc/shared';
+export { replay, AsyncIterableReplay } from './misc/replay';
+export { LinkedIterables } from './misc/linkedIterables';
 
 export { AsyncIterableLike, isAsync, isAsyncIterable, isSync, isPromise, from, fromPromise, fromSync } from './core';
 

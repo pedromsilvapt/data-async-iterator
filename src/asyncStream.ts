@@ -1,6 +1,7 @@
 import { CancelToken } from "data-cancel-token";
 import { Optional } from "data-optional";
 import { Either } from "@pedromsilva/data-either";
+import { SemaphoreLike } from "data-semaphore";
 
 import { AsyncIterableLike, toAsyncIterable, toAsyncIterator, toAsyncIterableIterator } from "./core";
 
@@ -23,7 +24,7 @@ import { debounce } from "./retimers/debounce";
 import { delay } from "./retimers/delay";
 import { liveUntil } from "./retimers/liveUntil";
 import { throttle } from "./retimers/throttle";
-import { SemaphoreLike } from "data-semaphore";
+import { synchronize } from "./retimers/synchronize";
 import { valve, release, releaseOnEnd } from "./retimers/valve";
 
 import { consume } from "./reducers/consume";
@@ -69,6 +70,8 @@ import { fromPromises } from "./constructors/fromPromises";
 import { concat } from "./combinators/concat";
 import { flatten, flattenConcurrent, flattenLast, flatMap, flatMapLast, flatMapConcurrent } from "./combinators/flatMap";
 import { merge } from "./combinators/merge";
+import { dup, fork, SharedNetwork, shared } from "./misc/shared";
+import { replay } from "./misc/replay";
 
 export class AsyncStream<T> implements AsyncIterable<T> {
     /* GENERATORS */
@@ -125,6 +128,19 @@ export class AsyncStream<T> implements AsyncIterable<T> {
 
     static merge<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>> ) : AsyncStream<T> {
         return new AsyncStream( merge( iterables ) );
+    }
+
+    /* RETIMERS */
+    static synchronize<T> ( iterables : Iterable<AsyncIterableLike<T>>, lag ?: number ) : AsyncStream<T>[];
+    static synchronize<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>>, lag ?: number ) : AsyncStream<AsyncStream<T>>;
+    static synchronize<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>> | Iterable<AsyncIterableLike<T>>, lag : number = 0 ) : AsyncStream<T>[] | AsyncStream<AsyncStream<T>> {
+        const result = synchronize( iterables, lag );
+
+        if ( result instanceof Array ) {
+            return result.map( iterable => new AsyncStream( iterable ) );
+        } else {
+            return new AsyncStream( map( result, iterable => new AsyncStream( iterable ) ) );
+        }
     }
 
     /* COMBINATORS */
@@ -289,6 +305,31 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return toSet( this.iterable, cancel );
     }
 
+    /* MISC */
+    shared () : SharedNetwork<T> {
+        return shared( this.iterable );
+    }
+
+    fork ( count : number )  : AsyncStream<T>[] {
+        return fork( this.iterable, count )
+            .map( iterable => new AsyncStream( iterable ) );
+    }
+
+    dup () : [ AsyncStream<T>, AsyncStream<T> ] {
+        const [ a, b ] = dup( this.iterable );
+
+        return [ new AsyncStream( a ), new AsyncStream( b ) ];
+    }
+
+    replay () : AsyncStream<T> {
+        return new AsyncStream<T>( replay( this.iterable ) );
+    }
+
+    synchronize <U> ( lag ?: number ) : AsyncStream<T extends AsyncIterableLike<U> ? AsyncStream<U> : never> {
+        return AsyncStream.synchronize<any>( this.iterable as AsyncIterable<any>, lag ) as any;
+    }
+    
+    /* QUERIES */
     count ( cancel ?: CancelToken ) : Promise<number> {
         return count( this.iterable, cancel );
     }
@@ -338,8 +379,6 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     liveUntil ( promise : Promise<void> ) : AsyncStream<T> {
         return new AsyncStream( liveUntil( this.iterable, promise ) );
     }
-
-    // TODO synchronize
 
     throttle ( interval : number ) : AsyncStream<T> {
         return new AsyncStream( throttle( this.iterable, interval ) );

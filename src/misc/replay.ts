@@ -1,5 +1,6 @@
 import { Future } from '@pedromsilva/data-future';
 import { Either } from '@pedromsilva/data-either';
+import { toAsyncIterator } from '../core';
 
 export class ReplayBuffer<T> {
     // Inclusive
@@ -38,16 +39,18 @@ export class ReplayBuffer<T> {
 }
 
 export class AsyncIterableReplay<T> implements AsyncIterable<T> {
-    public buffer : ReplayBuffer<Either<T, any>>;
+    public iterable : AsyncIterable<T>;
 
-    public source : AsyncIterator<T>;
+    protected iterator : AsyncIterator<T>;
 
-    public nextValue : Future<IteratorResult<T>> = null;
+    protected buffer : ReplayBuffer<Either<T, any>>;
 
-    public isDone : boolean = false;
+    protected nextValue : Future<IteratorResult<T>> = null;
 
-    constructor ( source : AsyncIterator<T>, bufferSize : number = Infinity ) {
-        this.source = source;
+    protected isDone : boolean = false;
+
+    constructor ( iterable : AsyncIterable<T>, bufferSize : number = Infinity ) {
+        this.iterable = iterable;
         this.buffer = new ReplayBuffer( bufferSize );
     }
 
@@ -62,7 +65,7 @@ export class AsyncIterableReplay<T> implements AsyncIterable<T> {
         //  - the buffer needs to be a sum type (Either<T, any>) to save both errors and values
         //  - the cleanup code should be in a finally, and there should be a catch to reject the future
         try {
-            const result = await this.source.next();
+            const result = await this.iterator.next();
         
             if ( result.done ) {
                 this.isDone = true;
@@ -84,7 +87,11 @@ export class AsyncIterableReplay<T> implements AsyncIterable<T> {
         }
     }
 
-    [Symbol.asyncIterator] () : AsyncIterator<T> {
+    [ Symbol.asyncIterator ] () : AsyncIterator<T> {
+        if ( this.iterator == null ) {
+            this.iterator = toAsyncIterator( this.iterable );
+        }
+
         let index : number = 0;
 
         const next = () : Promise<IteratorResult<T>> => {
@@ -116,6 +123,6 @@ export class AsyncIterableReplay<T> implements AsyncIterable<T> {
     }
 }
 
-export function replay<T> ( source : AsyncIterator<T>, bufferSize : number = Infinity ) : AsyncIterable<T> {
+export function replay<T> ( source : AsyncIterable<T>, bufferSize : number = Infinity ) : AsyncIterable<T> {
     return new AsyncIterableReplay<T>( source, bufferSize );
 }

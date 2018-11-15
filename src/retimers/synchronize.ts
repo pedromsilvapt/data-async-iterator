@@ -1,34 +1,55 @@
-import { AsyncIterableLike, isSync } from "../core";
-import { Semaphore, SemaphoreLike, StackedSemaphore, SemaphoreRelease } from "data-semaphore";
+import { AsyncIterableLike, isSync, toAsyncIterable } from "../core";
+import { Semaphore, SemaphoreLike, SemaphoreRelease } from "data-semaphore";
 import { valve } from "./valve";
 import { observe } from "../transformers/observe";
 import { map } from "../transformers/map";
+import { LinkedIterables } from "../misc/linkedIterables";
+
+export class SynchronizeNetwork {
+    link : LinkedIterables<Barrier>;
+
+    constructor ( bufferSize : number = 0 ) {
+        this.link = new LinkedIterables( () => new Barrier( 0, bufferSize ), true );
+    }
+
+    connect<T> ( iterable : AsyncIterableLike<T> ) : AsyncIterable<T> {
+        return this.link.create( barrier => {
+            const semaphore = barrier.add();
+
+            const throttled = valve( iterable, semaphore );
+
+            return observe( throttled, {
+                onValue: () => {
+                    this.link.purge( barrier );
+                },
+
+                onEnd: () => {
+                    barrier.remove( semaphore );
+                }
+            } )
+        } );
+    }
+}
 
 export function synchronize<T> ( iterables : Iterable<AsyncIterableLike<T>>, lag ?: number ) : AsyncIterable<T>[];
 export function synchronize<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>>, lag ?: number ) : AsyncIterable<AsyncIterable<T>>;
 export function synchronize<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>> | Iterable<AsyncIterableLike<T>>, lag : number = 0 ) : AsyncIterable<T>[] | AsyncIterable<AsyncIterable<T>> {
-    const barrier = new Barrier( 0, lag );
-    
-    const each = ( iterator : AsyncIterableLike<T>, semaphore : BarrierSemaphore ) => {
-        const throttle = valve( iterator, semaphore );
-
-        return observe( throttle, {
-            onEnd () {
-                barrier.remove( semaphore );
-            }
-        } );
-    }
+    const network = new SynchronizeNetwork( lag );
 
     if ( isSync( iterables ) ) {
         const iterators = Array.from( iterables );
-        
-        barrier.increase( iterators.length );
 
-        return iterators.map( ( iterator, index ) => each( iterator, barrier.getSemaphore( index ) ) );
-    } else {
-        const barrier = new Barrier( 0, lag );
+        if ( lag == Infinity ) {
+            return iterators.map( it => toAsyncIterable( it ) );
+        }
         
-        return map( iterables, iterator => each( iterator, barrier.add() ) );
+        return iterators.map( it => network.connect( it ) );
+    } else {
+        if ( lag == Infinity ) {
+            return map( iterables, it => toAsyncIterable( it ) );
+        }
+        
+        return map( iterables, iterator => network.connect( iterator ) );
     }
 }
 
@@ -115,11 +136,15 @@ export class Barrier {
     remove ( semaphore : BarrierSemaphore ) : this {
         const index = this.semaphores.indexOf( semaphore );
 
-        if ( index > 0 ) {
+        if ( index >= 0 ) {
             this.decrease( 1, index );
         }
         
         return this;
+    }
+
+    has ( semaphore : BarrierSemaphore ) : boolean {
+        return this.semaphores.indexOf( semaphore ) >= 0;
     }
 
     protected tryRelease () {
@@ -173,14 +198,16 @@ export class BarrierSemaphore implements SemaphoreLike {
     }
 
     async acquire () : Promise<SemaphoreRelease> {
-        this.barrier.arrived( this.index );
-
-        await this.stacked.acquire();
+        if ( this.barrier.has( this ) ) {
+            this.barrier.arrived( this.index );
+    
+            await this.stacked.acquire();
+        }
 
         return this.release.bind( this );
     }
 
-    release(): void {
+    release () : void {
         this.stacked.release();
     }
 
