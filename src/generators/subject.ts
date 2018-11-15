@@ -16,6 +16,14 @@ export class AsyncIterableSubject<T> extends EventEmitter implements AsyncIterab
 
     protected returned : boolean = false;
 
+    get bufferSize () : number {
+        return this.pushBuffer.length;
+    }
+
+    get queueSize () : number {
+        return this.pullQueue.length;
+    }
+
     get isPulling () : boolean {
         return this.pullQueue.length > 0;
     }

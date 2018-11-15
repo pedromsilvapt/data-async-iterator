@@ -32,6 +32,10 @@ export function isSync<T> ( iterable : AsyncIterableLike<T> ) : iterable is Iter
     return false;
 }
 
+export function isPromise<T> ( promise : any ) : promise is Promise<T> {
+    return promise instanceof Promise;
+}
+
 export function from<T> ( iterable : AsyncIterableLike<T> ) : AsyncIterable<T> {
     if ( isAsyncIterable( iterable ) ) {
         return iterable;

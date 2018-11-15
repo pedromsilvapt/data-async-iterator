@@ -4,6 +4,7 @@ export { concat } from './combinators/concat';
 export { flatMap, flatMapConcurrent, flatten, flatMapLast, flattenConcurrent, flattenLast } from './combinators/flatMap';
 export { merge } from './combinators/merge';
 
+export { dynamic } from './constructors/dynamic';
 export { fromArray } from './constructors/fromArray';
 export { fromPromises } from './constructors/fromPromises';
 
@@ -65,6 +66,6 @@ export { ErrorMatcher, takeUntilErrors } from './errors/takeUntilErrors';
 export { shared, SharedIterable, dup, fork } from './shared';
 export { replay, AsyncIterableReplay } from './replay';
 
-export { AsyncIterableLike, isAsync, isAsyncIterable, isSync, from, fromPromise, fromSync } from './core';
+export { AsyncIterableLike, isAsync, isAsyncIterable, isSync, isPromise, from, fromPromise, fromSync } from './core';
 
 export { CancelToken } from 'data-cancel-token';
