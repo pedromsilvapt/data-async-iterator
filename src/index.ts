@@ -67,6 +67,8 @@ export { shared, SharedNetwork, dup, fork } from './misc/shared';
 export { replay, AsyncIterableReplay } from './misc/replay';
 export { LinkedIterables } from './misc/linkedIterables';
 
+export { AsyncStream } from './asyncStream';
+
 export { AsyncIterableLike, isAsync, isAsyncIterable, isSync, isPromise, from, fromPromise, fromSync } from './core';
 
 export { CancelToken } from 'data-cancel-token';
