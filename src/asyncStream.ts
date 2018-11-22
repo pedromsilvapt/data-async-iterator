@@ -103,12 +103,6 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( fromPromises( promises ) );
     }
 
-    protected iterable : AsyncIterable<T>;
-
-    constructor ( iterable : AsyncIterableLike<T> ) {
-        this.iterable = toAsyncIterable( iterable );
-    }
-
     /* COMBINATORS */
     static concat<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>> ) : AsyncStream<T> {
         return new AsyncStream( concat( iterables ) );
@@ -141,6 +135,14 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         } else {
             return new AsyncStream( map( result, iterable => new AsyncStream( iterable ) ) );
         }
+    }
+
+    /* INSTANCE */
+
+    protected iterable : AsyncIterableLike<T>;
+
+    constructor ( iterable : AsyncIterableLike<T> ) {
+        this.iterable = iterable;
     }
 
     /* COMBINATORS */
@@ -483,7 +485,7 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* CUSTOMIZABLE */
-    pipe <U> ( fn : ( it : AsyncIterable<T> ) => AsyncIterable<U> ) : AsyncStream<U> {
+    pipe <U> ( fn : ( it : AsyncIterableLike<T> ) => AsyncIterable<U> ) : AsyncStream<U> {
         return new AsyncStream( fn( this.iterable ) );
     }
 

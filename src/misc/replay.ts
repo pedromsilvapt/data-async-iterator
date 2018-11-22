@@ -1,6 +1,6 @@
 import { Future } from '@pedromsilva/data-future';
 import { Either } from '@pedromsilva/data-either';
-import { toAsyncIterator } from '../core';
+import { toAsyncIterator, AsyncIterableLike } from '../core';
 
 export class ReplayBuffer<T> {
     // Inclusive
@@ -39,7 +39,7 @@ export class ReplayBuffer<T> {
 }
 
 export class AsyncIterableReplay<T> implements AsyncIterable<T> {
-    public iterable : AsyncIterable<T>;
+    public iterable : AsyncIterableLike<T>;
 
     protected iterator : AsyncIterator<T>;
 
@@ -49,7 +49,7 @@ export class AsyncIterableReplay<T> implements AsyncIterable<T> {
 
     protected isDone : boolean = false;
 
-    constructor ( iterable : AsyncIterable<T>, bufferSize : number = Infinity ) {
+    constructor ( iterable : AsyncIterableLike<T>, bufferSize : number = Infinity ) {
         this.iterable = iterable;
         this.buffer = new ReplayBuffer( bufferSize );
     }
@@ -123,6 +123,6 @@ export class AsyncIterableReplay<T> implements AsyncIterable<T> {
     }
 }
 
-export function replay<T> ( source : AsyncIterable<T>, bufferSize : number = Infinity ) : AsyncIterable<T> {
+export function replay<T> ( source : AsyncIterableLike<T>, bufferSize : number = Infinity ) : AsyncIterable<T> {
     return new AsyncIterableReplay<T>( source, bufferSize );
 }
