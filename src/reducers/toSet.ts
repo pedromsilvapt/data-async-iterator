@@ -1,11 +1,9 @@
-import { AsyncIterableLike } from "../core";
-import { CancelToken } from "data-cancel-token";
-import { cancellable } from "../transformers/cancellable";
+import { AsyncIterableLike, toAsyncIterable } from "../core";
 
-export async function toSet<T> ( iterable : AsyncIterableLike<T>, cancel ?: CancelToken ) : Promise<Set<T>> {
+export async function toSet<T> ( iterable : AsyncIterableLike<T> ) : Promise<Set<T>> {
     const set : Set<T> = new Set();
 
-    for await ( let item of cancellable( iterable, cancel ) ) {
+    for await ( let item of toAsyncIterable( iterable ) ) {
         set.add( item );
     }
 

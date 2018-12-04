@@ -1,11 +1,9 @@
-import { AsyncIterableLike } from "../core";
-import { CancelToken } from "data-cancel-token";
-import { cancellable } from "../transformers/cancellable";
+import { AsyncIterableLike, toAsyncIterable } from "../core";
 
-export async function toMap<K, V> ( iterable : AsyncIterableLike<[ K, V ]>, cancel ?: CancelToken ) : Promise<Map<K, V>> {
+export async function toMap<K, V> ( iterable : AsyncIterableLike<[ K, V ]> ) : Promise<Map<K, V>> {
     const map : Map<K, V> = new Map();
 
-    for await ( let [ key, value ] of cancellable( iterable, cancel ) ) {
+    for await ( let [ key, value ] of toAsyncIterable( iterable ) ) {
         map.set( key, value );
     }
 

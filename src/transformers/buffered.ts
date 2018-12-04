@@ -3,6 +3,7 @@ import { subject } from "../generators/subject";
 import { Semaphore } from "data-semaphore";
 import { CancelToken } from "data-cancel-token";
 import { forEach } from "../reducers/forEach";
+import { cancellable } from "./cancellable";
 
 export function buffered<T> ( iterable : AsyncIterableLike<T>, size : number ) : AsyncIterable<T> {
     return {
@@ -13,11 +14,11 @@ export function buffered<T> ( iterable : AsyncIterableLike<T>, size : number ) :
 
             const cancel : CancelToken = new CancelToken();
 
-            forEach( iterable, async value => {
+            forEach( cancellable( iterable, cancel ), async value => {
                 emitter.pushValue( value );
 
                 await semaphore.acquire();
-            }, cancel ).then( () => {
+            } ).then( () => {
                 emitter.end();
             } ).catch( err => {
                 emitter.pushException( err );

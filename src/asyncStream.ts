@@ -243,77 +243,75 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* REDUCERS */
-    consume ( observer : Partial<Observer<T>>, cancel ?: CancelToken ) : Promise<void> {
-        return consume( this.iterable, observer, cancel );
+    consume ( observer : Partial<Observer<T>> ) : Promise<void> {
+        return consume( this.iterable, observer );
     }
 
-    drain ( cancel ?: CancelToken, ignoreErrors : boolean = false ) : Promise<void> {
-        return drain( this.iterable, cancel, ignoreErrors );
+    drain ( ignoreErrors : boolean = false ) : Promise<void> {
+        return drain( this.iterable, ignoreErrors );
     }
 
-    forEach ( action : ( item : T ) => any | Promise<any>, cancel ?: CancelToken ) : Promise<void>;
-    forEach ( action : ( item : T ) => any | Promise<any>, onError : ( ( error : any ) => any | Promise<any> ), cancel ?: CancelToken ) : Promise<void>;
-    forEach ( action : ( item : T ) => any | Promise<any>, onError ?: ( ( error : any ) => any | Promise<any> ) | CancelToken, cancel ?: CancelToken ) : Promise<void> {
+    forEach ( action : ( item : T ) => any | Promise<any>, onError ?: ( error : any ) => any | Promise<any> ) : Promise<void> {
         return forEach( this.iterable, action );
     }
 
-    groupBy<K> ( keyer : ( item : T ) => K, cancel ?: CancelToken ) : Promise<Map<K, T[]>>;
-    groupBy<K, O = T> ( keyer : ( item : T ) => K, transform : ( values : T[] ) => O, cancel ?: CancelToken ) : Promise<Map<K, O>>;
-    groupBy<K, O = T> ( keyer : ( item : T ) => K, transform ?: ( ( values : T[] ) => O ) | CancelToken, cancel ?: CancelToken ) : Promise<Map<K, O | T[]>> {
-        return groupBy( this.iterable, keyer, transform as any, cancel );
+    groupBy<K> ( keyer : ( item : T ) => K ) : Promise<Map<K, T[]>>;
+    groupBy<K, O = T> ( keyer : ( item : T ) => K, transform : ( values : T[] ) => O ) : Promise<Map<K, O>>;
+    groupBy<K, O = T> ( keyer : ( item : T ) => K, transform ?: ( values : T[] ) => O ) : Promise<Map<K, O | T[]>> {
+        return groupBy( this.iterable, keyer, transform );
     }
 
-    inject <R> ( reducer : ( memo : R, item : T ) => any, seed : R, cancel ?: CancelToken ) : Promise<R> {
-        return inject( this.iterable, reducer, seed, cancel );
+    inject <R> ( reducer : ( memo : R, item : T ) => any, seed : R ) : Promise<R> {
+        return inject( this.iterable, reducer, seed );
     }
 
-    join ( separator = ',', cancel ?: CancelToken ) : Promise<string> {
-        return join( this.iterable, separator, cancel );
+    join ( separator = ',' ) : Promise<string> {
+        return join( this.iterable, separator );
     }
 
-    keyBy<K> ( keyer : ( item : T ) => K, cancel ?: CancelToken ) : Promise<Map<K, T>> {
-        return keyBy( this.iterable, keyer, cancel );
+    keyBy<K> ( keyer : ( item : T ) => K ) : Promise<Map<K, T>> {
+        return keyBy( this.iterable, keyer );
     }
 
     // TODO study conditional types for this
-    sum ( cancel ?: CancelToken ) : Promise<number> {
-        return sum( this.iterable as AsyncIterable<any>, cancel );
+    sum () : Promise<number> {
+        return sum( this.iterable as AsyncIterable<any> );
     }
 
-    product ( cancel ?: CancelToken ) : Promise<number> {
-        return product( this.iterable as AsyncIterable<any>, cancel );
+    product () : Promise<number> {
+        return product( this.iterable as AsyncIterable<any> );
     }
 
-    mean ( cancel ?: CancelToken ) : Promise<number> {
-        return mean( this.iterable as AsyncIterable<any>, cancel );
+    mean () : Promise<number> {
+        return mean( this.iterable as AsyncIterable<any> );
     }
 
-    bounds ( cancel ?: CancelToken ) : Promise<[ number, number ]> {
-        return bounds( this.iterable as AsyncIterable<any>, cancel );
+    bounds () : Promise<[ number, number ]> {
+        return bounds( this.iterable as AsyncIterable<any> );
     }
 
-    min ( cancel ?: CancelToken ) : Promise<number> {
-        return min( this.iterable as AsyncIterable<any>, cancel );
+    min () : Promise<number> {
+        return min( this.iterable as AsyncIterable<any> );
     }
 
-    max ( cancel ?: CancelToken ) : Promise<number> {
-        return max( this.iterable as AsyncIterable<any>, cancel );
+    max () : Promise<number> {
+        return max( this.iterable as AsyncIterable<any> );
     }
 
-    reduce<R> ( reducer : ( memo : R, item : T ) => R, seed : R, cancel ?: CancelToken ) : Promise<R> {
-        return reduce( this.iterable, reducer, seed, cancel );
+    reduce<R> ( reducer : ( memo : R, item : T ) => R, seed : R ) : Promise<R> {
+        return reduce( this.iterable, reducer, seed );
     }
 
     toMap<K, V> ( cancel ?: CancelToken ) : T extends [K, V] ? Promise<Map<K, V>> : never {
-        return toMap<K, V>( this.iterable as AsyncIterable<any>, cancel ) as any;
+        return toMap<K, V>( this.iterable as AsyncIterable<any> ) as any;
     }
 
     toArray ( cancel ?: CancelToken ) : Promise<T[]> {
-        return toArray( this.iterable, cancel );
+        return toArray( this.iterable );
     }
 
     toSet ( cancel ?: CancelToken ) : Promise<Set<T>> {
-        return toSet( this.iterable, cancel );
+        return toSet( this.iterable );
     }
 
     /* MISC */

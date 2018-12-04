@@ -6,6 +6,7 @@ import { forEach } from "../reducers/forEach";
 import { CancelToken } from "data-cancel-token";
 import { map } from "../transformers/map";
 import { safe } from "../transformers/safe";
+import { cancellable } from "../transformers/cancellable";
 
 export function flatMap<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U> ) : AsyncIterable<U> {
     return flatten( map<T, AsyncIterableLike<U>>( iterables, mapper ) );
@@ -104,7 +105,7 @@ export function flattenConcurrent<T> ( iterables : AsyncIterableLike<AsyncIterab
 
             const iterablesTask : CancelToken = new CancelToken();
 
-            forEach( iterables, async source => {
+            forEach( cancellable( iterables, iterablesTask ), async source => {
                 if ( switchFast && iteratorsOrdered.length == concurrency ) {
                     const oldest = iteratorsOrdered.shift();
 
@@ -128,7 +129,7 @@ export function flattenConcurrent<T> ( iterables : AsyncIterableLike<AsyncIterab
                 if ( !switchFast ) {
                     await iteratorsConcurrency.acquire();
                 }
-            }, iterablesTask ).then( () => {
+            } ).then( () => {
                 drainedMain = true;
 
                 if ( iterators.size == 0 && buffer.length == 0 && future ) {

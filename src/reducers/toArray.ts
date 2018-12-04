@@ -1,11 +1,9 @@
-import { CancelToken } from "data-cancel-token";
-import { AsyncIterableLike } from "../core";
-import { cancellable } from "../transformers/cancellable";
+import { AsyncIterableLike, toAsyncIterable } from "../core";
 
-export async function toArray<T> ( iterable : AsyncIterableLike<T>, cancel ?: CancelToken ) : Promise<T[]> {
+export async function toArray<T> ( iterable : AsyncIterableLike<T> ) : Promise<T[]> {
     const array : T[] = []
 
-    for await ( let item of cancellable( iterable, cancel ) ) {
+    for await ( let item of toAsyncIterable( iterable ) ) {
         array.push( item );
     }
 
