@@ -341,38 +341,52 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
     
     /* QUERIES */
-    count ( cancel ?: CancelToken ) : Promise<number> {
-        return count( this.iterable, cancel );
+    count () : Promise<number> {
+        return count( this.iterable );
     }
 
-    every ( predicate : ( item : T, index : number ) => boolean | Promise<boolean>, cancel ?: CancelToken ) : Promise<boolean> {
-        return every( this.iterable, predicate, cancel );
+    every ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : Promise<boolean> {
+        return every( this.iterable, predicate );
     }
 
-    find ( predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, cancel ?: CancelToken ) : Promise<Optional<T>> {
-        return find( this.iterable, predicate, cancel );
+    find ( predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, optional ?: false ) : Promise<T>;
+    find ( predicate : ( item : T, index : number ) => Promise<boolean> | boolean, optional : true ) : Promise<Optional<T>>;
+    find ( predicate : ( item : T, index : number ) => Promise<boolean> | boolean, optional : boolean ) : Promise<T | Optional<T>>;
+    find ( predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, optional : boolean = false ) : Promise<T | Optional<T>> {
+        return find( this.iterable, predicate, optional );
     }
 
-    findLast ( predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, cancel ?: CancelToken ) : Promise<Optional<T>> {
-        return findLast( this.iterable, predicate, cancel );
+    findLast ( predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, optional ?: false ) : Promise<T>;
+    findLast ( predicate : ( item : T, index : number ) => Promise<boolean> | boolean, optional : true ) : Promise<Optional<T>>;
+    findLast ( predicate : ( item : T, index : number ) => Promise<boolean> | boolean, optional : boolean ) : Promise<T | Optional<T>>;
+    findLast ( predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, optional : boolean = false ) : Promise<T | Optional<T>> {
+        return findLast( this.iterable, predicate, optional );
     }
 
-    first ( cancel ?: CancelToken ) : Promise<Optional<T>> {
-        return first( this.iterable, cancel );
+    first ( optional ?: false ) : Promise<T>;
+    first ( optional : true ) : Promise<Optional<T>>;
+    first ( optional : boolean ) : Promise<T | Optional<T>>;
+    first ( optional : boolean = false ) : Promise<T | Optional<T>> {
+        return first( this.iterable, optional );
     }
 
-    last ( cancel ?: CancelToken ) : Promise<Optional<T>> {
-        return last( this.iterable, cancel );
+    last ( optional ?: false ) : Promise<T>;
+    last ( optional : true ) : Promise<Optional<T>>;
+    last ( optional : boolean ) : Promise<T | Optional<T>>;
+    last ( optional : boolean = false ) : Promise<T | Optional<T>> {
+        return last( this.iterable, optional );
     }
 
-    pick ( index : number, cancel ?: CancelToken ) : Promise<Optional<T>> {
-        return pick( this.iterable, index, cancel );
+    pick ( index : number, optional ?: false ) : Promise<T>;
+    pick ( index : number, optional : true ) : Promise<Optional<T>>;
+    pick ( index : number, optional : boolean ) : Promise<T | Optional<T>>;
+    pick ( index : number, optional : boolean = false ) : Promise<T | Optional<T>> {
+        return pick( this.iterable, index, optional );
     }
 
-    some ( predicate : ( item : T, index : number ) => boolean | Promise<boolean>, cancel ?: CancelToken ) : Promise<boolean> {
-        return some( this.iterable, predicate, cancel );
+    some ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : Promise<boolean> {
+        return some( this.iterable, predicate );
     }
-
 
     tap ( action : ( item : T, index : number ) => any | Promise<any> ) : AsyncStream<T> {
         return new AsyncStream( tap( this.iterable, action ) );

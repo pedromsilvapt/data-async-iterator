@@ -1,12 +1,21 @@
 import { Optional } from "data-optional";
-import { CancelToken } from "data-cancel-token";
-import { cancellable } from "../transformers/cancellable";
-import { AsyncIterableLike } from "../core";
+import { AsyncIterableLike, toAsyncIterable } from "../core";
 
-export async function first<T> ( iterable : AsyncIterableLike<T>, cancel ?: CancelToken ) : Promise<Optional<T>> {
-    for await ( let item of cancellable( iterable, cancel ) ) {
-        return Optional.of( item );
+export async function first<T> ( iterable : AsyncIterableLike<T>, optional ?: false ) : Promise<T>;
+export async function first<T> ( iterable : AsyncIterableLike<T>, optional : true ) : Promise<Optional<T>>;
+export async function first<T> ( iterable : AsyncIterableLike<T>, optional : boolean ) : Promise<T | Optional<T>>;
+export async function first<T> ( iterable : AsyncIterableLike<T>, optional : boolean = false ) : Promise<T | Optional<T>> {
+    for await ( let item of toAsyncIterable( iterable ) ) {
+        if ( optional ) {
+            return Optional.of( item );
+        } else {
+            return item;
+        }
     }
 
-    return Optional.empty();
+    if ( optional ) {
+        return Optional.empty();
+    } else {
+        return null;
+    }
 }

@@ -5,10 +5,16 @@ import { filter } from "../transformers/filter";
 import { first } from "./first";
 import { last } from "./last";
 
-export function find<T> ( iterable : AsyncIterableLike<T>, predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, cancel ?: CancelToken ) : Promise<Optional<T>> {
-    return first( filter( iterable, predicate ), cancel );
+export function find<T> ( iterable : AsyncIterableLike<T>, predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, optional ?: false ) : Promise<T>;
+export function find<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => Promise<boolean> | boolean, optional : true ) : Promise<Optional<T>>;
+export function find<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => Promise<boolean> | boolean, optional : boolean ) : Promise<T | Optional<T>>;
+export function find<T> ( iterable : AsyncIterableLike<T>, predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, optional : boolean = false ) : Promise<T | Optional<T>> {
+    return first( filter( iterable, predicate ), optional );
 }
 
-export function findLast<T> ( iterable : AsyncIterableLike<T>, predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, cancel ?: CancelToken ) : Promise<Optional<T>> {
-    return last( filter( iterable, predicate ), cancel );
+export function findLast<T> ( iterable : AsyncIterableLike<T>, predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, optional ?: false ) : Promise<T>;
+export function findLast<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => Promise<boolean> | boolean, optional : true ) : Promise<Optional<T>>;
+export function findLast<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => Promise<boolean> | boolean, optional : boolean ) : Promise<T | Optional<T>>;
+export function findLast<T> ( iterable : AsyncIterableLike<T>, predicate ?: ( item : T, index : number ) => Promise<boolean> | boolean, optional : boolean = false ) : Promise<T | Optional<T>> {
+    return last( filter( iterable, predicate ), optional );
 }
