@@ -7,7 +7,7 @@ import { AsyncIterableLike, toAsyncIterable, toAsyncIterator, toAsyncIterableIte
 
 import { map } from "./transformers/map";
 import { filter, reject } from "./transformers/filter";
-import { distinct } from "./transformers/distinct";
+import { distinct, distinctUntilChanged } from "./transformers/distinct";
 import { IterablePackage, describe } from "./transformers/describe";
 import { cancellable } from "./transformers/cancellable";
 import { buffered } from "./transformers/buffered";
@@ -64,6 +64,7 @@ import { takeErrors } from "./errors/takeErrors";
 import { ErrorMatcher, takeUntilErrors } from "./errors/takeUntilErrors";
 import { throwIf } from "./errors/throwIf";
 
+import { dynamic } from "./constructors/dynamic";
 import { fromArray } from "./constructors/fromArray";
 import { fromPromises } from "./constructors/fromPromises";
 
@@ -72,6 +73,7 @@ import { flatten, flattenConcurrent, flattenLast, flatMap, flatMapLast, flatMapC
 import { merge } from "./combinators/merge";
 import { dup, fork, SharedNetwork, shared } from "./misc/shared";
 import { replay } from "./misc/replay";
+import { stateful } from "./transformers/stateful";
 
 export class AsyncStream<T> implements AsyncIterable<T> {
     /* GENERATORS */
@@ -87,7 +89,6 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( repeat( value, count ) );
     }
 
-    // TODO subject
     static subject <T> () : [ AsyncIterableSubject<T>, AsyncStream<T> ] {
         const sub = subject<T>();
 
@@ -95,12 +96,20 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* CONSTRUCTORS */
+    static dynamic<T> ( factory : () => AsyncIterableLike<T> ) : AsyncStream<T> {
+        return new AsyncStream( dynamic( factory ) );
+    }
+
     static fromArray<T> ( array : T[] | Promise<T[]> ) : AsyncStream<T> {
         return new AsyncStream( fromArray( array ) );
     }
 
     static fromPromises<T> ( promises : Promise<T>[], sequential : boolean = false ) : AsyncStream<T> {
-        return new AsyncStream( fromPromises( promises ) );
+        return new AsyncStream( fromPromises( promises, sequential ) );
+    }
+
+    static stateful<S, T> ( reducer : ( item : S ) => [S,  T] | Promise<[S, T]>, seed : S ) : AsyncStream<T> {
+        return AsyncStream.repeat( null ).stateful( state => reducer( state ), seed );
     }
 
     /* COMBINATORS */
@@ -456,6 +465,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( reject( this.iterable, predicate ) );
     }
 
+    distinctUntilChanged () : AsyncStream<T> {
+        return new AsyncStream( distinctUntilChanged( this.iterable ) );
+    }
+
     distinct () : AsyncStream<T> {
         return new AsyncStream( distinct( this.iterable ) );
     }
@@ -482,6 +495,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
 
     scanSelf ( reducer : ( memo : T, item : T ) => T ) : AsyncStream<T> {
         return new AsyncStream( scanSelf( this.iterable, reducer ) );
+    }
+
+    stateful<U, S> ( reducer : ( state : S, item : T ) => [S, U] | Promise<[S, U]>, seed : S ) : AsyncStream<U> {
+        return new AsyncStream( stateful( this.iterable, reducer, seed ) );
     }
 
     /* CUSTOMIZABLE */
