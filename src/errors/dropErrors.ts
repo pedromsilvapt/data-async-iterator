@@ -1,7 +1,7 @@
 import { AsyncIterableLike, toAsyncIterator } from "../core";
 import { safe } from "../transformers/safe";
 
-export function skipErrors<I> ( iterable : AsyncIterableLike<I> ) : AsyncIterable<I> {
+export function dropErrors<I> ( iterable : AsyncIterableLike<I> ) : AsyncIterable<I> {
     return safe( {
         [ Symbol.asyncIterator ] () : AsyncIterableIterator<I> {
             const iterator = toAsyncIterator( iterable );

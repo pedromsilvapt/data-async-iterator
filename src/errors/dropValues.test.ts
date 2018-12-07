@@ -1,12 +1,12 @@
 import test from 'blue-tape';
 import { throwIf } from './throwIf';
-import { skipValues } from './skipValues';
+import { dropValues } from './dropValues';
 
 test( 'throw results when boolean', async t => {
-    const iterable = skipValues( throwIf( [ 1, new Error( 'skipValues' ), 2 ] ) );
+    const iterable = dropValues( throwIf( [ 1, new Error( 'dropValues' ), 2 ] ) );
 
     const iterator = iterable[ Symbol.asyncIterator ]();
 
-    await t.shouldFail( iterator.next(), 'skipValues' );
+    await t.shouldFail( iterator.next(), 'dropValues' );
     t.deepLooseEqual( await iterator.next(), { done: true, value: void 0 } );
 } );

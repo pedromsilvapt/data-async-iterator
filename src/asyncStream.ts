@@ -57,8 +57,8 @@ import { repeat } from "./generators/repeat";
 import { filterErrors } from "./errors/filterErrors";
 import { mapEither } from "./errors/mapEither";
 import { mapErrors } from "./errors/mapErrors";
-import { skipErrors } from "./errors/skipErrors";
-import { skipValues } from "./errors/skipValues";
+import { dropErrors } from "./errors/dropErrors";
+import { dropValues } from "./errors/dropValues";
 import { splitErrors } from "./errors/splitErrors";
 import { takeErrors } from "./errors/takeErrors";
 import { ErrorMatcher, takeUntilErrors } from "./errors/takeUntilErrors";
@@ -74,6 +74,8 @@ import { merge } from "./combinators/merge";
 import { dup, fork, SharedNetwork, shared } from "./misc/shared";
 import { replay } from "./misc/replay";
 import { stateful } from "./transformers/stateful";
+import { Collector } from "data-collectors";
+import { collect } from "./reducers/collect";
 
 export class AsyncStream<T> implements AsyncIterable<T> {
     /* GENERATORS */
@@ -214,12 +216,12 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( mapErrors( this.iterable, mapper, keepErrors ) );
     }
     
-    skipErrors () : AsyncStream<T> {
-        return new AsyncStream( skipErrors( this.iterable ) );
+    dropErrors () : AsyncStream<T> {
+        return new AsyncStream( dropErrors( this.iterable ) );
     }
 
-    skipValues () : AsyncStream<any> {
-        return new AsyncStream( skipValues( this.iterable ) );
+    dropValues () : AsyncStream<any> {
+        return new AsyncStream( dropValues( this.iterable ) );
     }
 
     splitErrors<E = any> () : [ AsyncStream<E>, AsyncStream<T> ] {
@@ -243,6 +245,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* REDUCERS */
+    collect<R> ( collector : Collector<T, any, R> ) : Promise<R> {
+        return collect( this.iterable, collector );
+    }
+
     consume ( observer : Partial<Observer<T>> ) : Promise<void> {
         return consume( this.iterable, observer );
     }

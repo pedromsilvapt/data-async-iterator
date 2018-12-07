@@ -58,9 +58,13 @@ export { safe } from './transformers/safe';
 export { scan, scanSelf } from './transformers/scan';
 
 export { mapErrors } from './errors/mapErrors';
+export { mapEither } from './errors/mapEither';
 export { filterErrors } from './errors/filterErrors';
-export { skipErrors } from './errors/skipErrors';
+export { dropErrors } from './errors/dropErrors';
+export { dropValues } from './errors/dropValues';
+export { splitErrors } from './errors/splitErrors';
 export { takeErrors } from './errors/takeErrors';
+export { throwIf } from './errors/throwIf';
 export { ErrorMatcher, takeUntilErrors } from './errors/takeUntilErrors';
 
 export { shared, SharedNetwork, dup, fork } from './misc/shared';

@@ -1,10 +1,10 @@
 import test from 'blue-tape';
-import { skipErrors } from './skipErrors';
+import { dropErrors } from './dropErrors';
 import { throwIf } from './throwIf';
 
 
 test( 'throw results when boolean', async t => {
-    const iterable = skipErrors( throwIf( [ 1, new Error( 'skipErrors' ), 2 ] ) );
+    const iterable = dropErrors( throwIf( [ 1, new Error( 'dropErrors' ), 2 ] ) );
 
     const iterator = iterable[ Symbol.asyncIterator ]();
 
