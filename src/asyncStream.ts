@@ -99,8 +99,8 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* CONSTRUCTORS */
-    static dynamic<T> ( factory : () => AsyncIterableLike<T> ) : AsyncStream<T> {
-        return new AsyncStream( dynamic( factory ) );
+    static dynamic<T> ( factory : () => AsyncIterableLike<T>, lazy : boolean = false ) : AsyncStream<T> {
+        return new AsyncStream( dynamic( factory, lazy ) );
     }
 
     static fromArray<T> ( array : T[] | Promise<T[]> ) : AsyncStream<T> {
@@ -525,8 +525,20 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* CUSTOMIZABLE */
-    pipe <U> ( fn : ( it : AsyncIterableLike<T> ) => AsyncIterable<U> ) : AsyncStream<U> {
+    pipe <U> ( fn : ( it : AsyncIterableLike<T> ) => AsyncIterableLike<U> ) : AsyncStream<U> {
         return new AsyncStream( fn( this.iterable ) );
+    }
+
+    lazyPipe<U> ( fn : ( it : AsyncIterableLike<T> ) => AsyncIterableLike<U> ) : AsyncStream<U> {
+        return this.lazy( stream => fn( stream.iterable ) );
+    }
+
+    lazy<U> ( fn : ( it : AsyncStream<T> ) => AsyncIterableLike<U> ) : AsyncStream<U> {
+        return this.dynamic( fn, true );
+    }
+
+    dynamic<U> ( fn : ( it : AsyncStream<T> ) => AsyncIterableLike<U>, lazy : boolean = false ) : AsyncStream<U> {
+        return AsyncStream.dynamic( () => fn( this ), lazy );
     }
 
     /* CONERTERS */
