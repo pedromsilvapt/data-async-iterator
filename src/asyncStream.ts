@@ -74,8 +74,9 @@ import { merge } from "./combinators/merge";
 import { dup, fork, SharedNetwork, shared } from "./misc/shared";
 import { replay } from "./misc/replay";
 import { stateful } from "./transformers/stateful";
-import { Collector } from "data-collectors";
+import { Collector, Comparator } from "data-collectors";
 import { collect } from "./reducers/collect";
+import { sort } from "./retimers/sort";
 
 export class AsyncStream<T> implements AsyncIterable<T> {
     /* GENERATORS */
@@ -407,6 +408,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
 
     liveUntil ( promise : Promise<void> ) : AsyncStream<T> {
         return new AsyncStream( liveUntil( this.iterable, promise ) );
+    }
+
+    sort ( comparator ?: Comparator<T> ) : AsyncStream<T> {
+        return new AsyncStream( sort( this.iterable, comparator ) );
     }
 
     throttle ( interval : number ) : AsyncStream<T> {
