@@ -1,6 +1,6 @@
 {
   "name": "data-async-iterators",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Batteries-included utility functions to work with async iterables available in ES2018/TypeScript",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -27,6 +27,7 @@
     "@pedromsilva/data-either": "0.0.2",
     "@pedromsilva/data-future": "^1.0.0",
     "data-cancel-token": "^0.5.2",
+    "data-collectors": "^1.0.1",
     "data-optional": "0.0.2",
     "data-semaphore": "^0.3.7",
     "eventemitter3": "^3.0.1"
@@ -35,7 +36,6 @@
     "@types/blue-tape": "^0.1.32",
     "@types/node": "^8.10.11",
     "blue-tape": "^1.0.0",
-    "data-collectors": "^1.0.1",
     "tap-dot": "^2.0.0",
     "tape": "^4.9.1"
   }
