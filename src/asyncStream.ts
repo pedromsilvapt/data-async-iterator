@@ -69,7 +69,7 @@ import { fromArray } from "./constructors/fromArray";
 import { fromPromises } from "./constructors/fromPromises";
 
 import { concat } from "./combinators/concat";
-import { flatten, flattenConcurrent, flattenLast, flatMap, flatMapLast, flatMapConcurrent } from "./combinators/flatMap";
+import { flatten, flattenConcurrent, flattenLast, flatMap, flatMapLast, flatMapConcurrent, flattenSorted, flatMapSorted } from "./combinators/flatMap";
 import { merge } from "./combinators/merge";
 import { dup, fork, SharedNetwork, shared } from "./misc/shared";
 import { replay } from "./misc/replay";
@@ -132,6 +132,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( flattenConcurrent( iterables, concurrency, switchFast ) );
     }
 
+    static flattenSorted<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>>, comparator : Comparator<T> ) : AsyncStream<T> {
+        return new AsyncStream( flattenSorted( iterables, comparator ) );
+    }
+
     static merge<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>> ) : AsyncStream<T> {
         return new AsyncStream( merge( iterables ) );
     }
@@ -170,6 +174,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( flatMapConcurrent( this.iterable, mapper, concurrency, switchFast ) );
     }
 
+    flatMapSorted<U> ( mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, comparator : Comparator<U> ) : AsyncStream<U> {
+        return new AsyncStream( flatMapSorted( this.iterable as AsyncIterable<any>, mapper, comparator ) );
+    }
+
     flatten<U> () : AsyncStream<T extends AsyncIterableLike<U> ? U : never> {
         return new AsyncStream( flatten( this.iterable as AsyncIterable<any> ) );
     }
@@ -180,6 +188,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
 
     flattenConcurrent<U> ( concurrency : number, switchFast : boolean = false ) : AsyncStream<T extends AsyncIterableLike<U> ? U : never> {
         return new AsyncStream( flattenConcurrent( this.iterable as AsyncIterable<any>, concurrency, switchFast ) );
+    }
+
+    flattenSorted<U> ( comparator : Comparator<U> ) : AsyncStream<T extends AsyncIterableLike<U> ? U : never> {
+        return new AsyncStream( flattenSorted( this.iterable as AsyncIterable<any>, comparator as any ) );
     }
 
     concat ( first : AsyncIterableLike<T>, ...values : AsyncIterableLike<T>[] ) : AsyncStream<T>;

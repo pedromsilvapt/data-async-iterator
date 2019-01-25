@@ -7,6 +7,9 @@ import { CancelToken } from "data-cancel-token";
 import { map } from "../transformers/map";
 import { safe } from "../transformers/safe";
 import { cancellable } from "../transformers/cancellable";
+import { Comparator } from 'data-collectors';
+import { toArray } from '../reducers/toArray';
+import { AsyncIterableSubject } from '../generators/subject';
 
 export function flatMap<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U> ) : AsyncIterable<U> {
     return flatten( map<T, AsyncIterableLike<U>>( iterables, mapper ) );
@@ -18,6 +21,10 @@ export function flatMapLast<T, U> ( iterables : AsyncIterableLike<T>, mapper : (
 
 export function flatMapConcurrent<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, concurrency : number, switchFast : boolean = false ) : AsyncIterable<U> {
     return flattenConcurrent( map<T, AsyncIterableLike<U>>( iterables, mapper ), concurrency, switchFast );
+}
+
+export function flatMapSorted<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, comparator : Comparator<U> ) : AsyncIterable<U> {
+    return flattenSorted( map<T, AsyncIterableLike<U>>( iterables, mapper ), comparator );
 }
 
 export function flatten<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>> ) : AsyncIterable<T> {
@@ -194,6 +201,114 @@ export function flattenConcurrent<T> ( iterables : AsyncIterableLike<AsyncIterab
                     }
                 }
             }
+        }
+    } );
+}
+
+type SortedValue<T> = {
+    exists : boolean;
+    done : boolean;
+    value : T;
+};
+
+export function flattenSorted<T> ( iterables : AsyncIterableLike<AsyncIterableLike<T>>, comparator : Comparator<T> ) {
+    return safe( {
+        [ Symbol.asyncIterator ] () {
+            let iterators : AsyncIterator<T>[] = null;
+
+            let results : SortedValue<T>[] = null;
+
+            let thinking : number = 0;
+
+            let running = new Set<number>();
+
+            let queue = new AsyncIterableSubject<T>();
+
+            const flush = async () => {
+                if ( running.size == 0 ) {
+                    const remaining = results.filter( a => a.exists ).map( a => a.value ).sort( comparator );
+
+                    for ( let result of remaining ) {
+                        queue.pushValue( result );
+                    }
+
+                    queue.end();
+                } else {
+                    let min : T = null;
+                    let minIndex = -1;
+                    let value : T = null;
+
+                    for( let index of running ) {
+                        value = results[ index ].value;
+
+                        if ( minIndex < 0 || comparator( min, value ) > 0 ) {
+                            minIndex = index;
+                            min = value;
+                        }
+                    }
+
+                    queue.pushValue( min );
+
+                    thinking += 1;
+
+                    pull( iterators[ minIndex ], minIndex );
+                }
+            };
+
+            const pull = async ( iterator : AsyncIterator<T>, index : number ) => {
+                try {
+                    const result = results[ index ];
+
+                    result.exists = false;
+                    result.value = null;
+
+                    const { done, value } = await iterator.next();
+
+                    if ( done ) {
+                        results[ index ].done = true;
+                        
+                        result.exists = false;
+                        result.value = null;
+
+                        running.delete( index );
+                    } else {
+                        result.exists = true;
+                        result.value = value;
+                    }
+
+                    thinking -= 1;
+
+                    if ( thinking == 0 ) {
+                        flush();
+                    }
+                } catch ( error ) {
+                    queue.pushException( error );
+
+                    pull( iterator, index );
+                }
+            };
+
+            return {
+                [ Symbol.asyncIterator ] () : AsyncIterableIterator<T> {
+                    return this;
+                },
+
+                async next () : Promise<IteratorResult<T>> {
+                    if ( iterators == null ) {
+                        iterators = ( await toArray( iterables ) ).map( iterable => toAsyncIterator( iterable ) );
+
+                        results = iterators.map( () => ( { exists: false, done: false, value: null } ) );
+
+                        thinking = iterators.length;
+
+                        running = new Set( iterators.map( ( _, i ) => i ) );
+
+                        iterators.forEach( pull );
+                    }
+
+                    return queue.next();
+                }
+            };
         }
     } );
 }
