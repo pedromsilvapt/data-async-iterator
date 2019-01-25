@@ -19,4 +19,17 @@ test( '#flattenSorted', async t => {
         t.deepLooseEqual( await iterator.next(), { done: false, value: 6 } );
         t.deepLooseEqual( await iterator.next(), { done: true, value: void 0 } );
     } );
+
+    test( 'sorted iterables return early', async t => {
+        const iterable = flattenSorted( [ 
+            delay( [ 1, 3, 5 ], 100 ) ,
+            delay( [ 2, 4, 6 ], 210 )
+        ], ( a, b ) => a - b );
+    
+        const iterator = iterable[ Symbol.asyncIterator ]();
+    
+        t.deepLooseEqual( await iterator.next(), { done: false, value: 1 } );
+        t.deepLooseEqual( await iterator.return( 123 ), { done: true, value: 123 } );
+        t.deepLooseEqual( await iterator.next(), { done: true, value: void 0 } );
+    } );
 } );

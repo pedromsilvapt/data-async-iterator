@@ -162,19 +162,19 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* COMBINATORS */
-    flatMap<U> ( mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U> ) : AsyncStream<U> {
+    flatMap<U> ( mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U> ) : AsyncStream<U> {
         return new AsyncStream( flatMap( this.iterable, mapper ) );
     }
 
-    flatMapLast<U> ( mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, concurrency : number ) : AsyncStream<U> {
+    flatMapLast<U> ( mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U>, concurrency : number ) : AsyncStream<U> {
         return new AsyncStream( flatMapLast( this.iterable, mapper, concurrency ) );
     }
 
-    flatMapConcurrent<U> ( mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, concurrency : number, switchFast : boolean = false ) : AsyncStream<U> {
+    flatMapConcurrent<U> ( mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U>, concurrency : number, switchFast : boolean = false ) : AsyncStream<U> {
         return new AsyncStream( flatMapConcurrent( this.iterable, mapper, concurrency, switchFast ) );
     }
 
-    flatMapSorted<U> ( mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, comparator : Comparator<U> ) : AsyncStream<U> {
+    flatMapSorted<U> ( mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U>, comparator : Comparator<U> ) : AsyncStream<U> {
         return new AsyncStream( flatMapSorted( this.iterable as AsyncIterable<any>, mapper, comparator ) );
     }
 

@@ -11,19 +11,19 @@ import { Comparator } from 'data-collectors';
 import { toArray } from '../reducers/toArray';
 import { AsyncIterableSubject } from '../generators/subject';
 
-export function flatMap<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U> ) : AsyncIterable<U> {
+export function flatMap<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U> ) : AsyncIterable<U> {
     return flatten( map<T, AsyncIterableLike<U>>( iterables, mapper ) );
 }
 
-export function flatMapLast<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, concurrency : number ) : AsyncIterable<U> {
+export function flatMapLast<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U>, concurrency : number ) : AsyncIterable<U> {
     return flattenLast( map<T, AsyncIterableLike<U>>( iterables, mapper ), concurrency );
 }
 
-export function flatMapConcurrent<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, concurrency : number, switchFast : boolean = false ) : AsyncIterable<U> {
+export function flatMapConcurrent<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U>, concurrency : number, switchFast : boolean = false ) : AsyncIterable<U> {
     return flattenConcurrent( map<T, AsyncIterableLike<U>>( iterables, mapper ), concurrency, switchFast );
 }
 
-export function flatMapSorted<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<AsyncIterableLike<U>> | AsyncIterableLike<U>, comparator : Comparator<U> ) : AsyncIterable<U> {
+export function flatMapSorted<T, U> ( iterables : AsyncIterableLike<T>, mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U>, comparator : Comparator<U> ) : AsyncIterable<U> {
     return flattenSorted( map<T, AsyncIterableLike<U>>( iterables, mapper ), comparator );
 }
 
@@ -224,7 +224,11 @@ export function flattenSorted<T> ( iterables : AsyncIterableLike<AsyncIterableLi
 
             let queue = new AsyncIterableSubject<T>();
 
+            let returned = false;
+
             const flush = async () => {
+                if ( returned ) return;
+
                 if ( running.size == 0 ) {
                     const remaining = results.filter( a => a.exists ).map( a => a.value ).sort( comparator );
 
@@ -263,6 +267,8 @@ export function flattenSorted<T> ( iterables : AsyncIterableLike<AsyncIterableLi
                     result.value = null;
 
                     const { done, value } = await iterator.next();
+
+                    if ( returned ) return;
 
                     if ( done ) {
                         results[ index ].done = true;
@@ -307,6 +313,24 @@ export function flattenSorted<T> ( iterables : AsyncIterableLike<AsyncIterableLi
                     }
 
                     return queue.next();
+                },
+
+                async return ( value ?: any ) : Promise<IteratorResult<T>> {
+                    returned = true;
+
+                    if ( iterators != null ) {
+                        await Promise.all( iterators.filter( ( _, i ) => results[ i ].done ).map( it => it.return( value ) ) );
+                    }
+
+                    await queue.return( value );
+
+                    running.clear();
+
+                    results = [];
+
+                    iterators = [];
+
+                    return { done: true, value };
                 }
             };
         }
