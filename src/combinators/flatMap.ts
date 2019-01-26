@@ -136,6 +136,13 @@ export function flattenConcurrent<T> ( iterables : AsyncIterableLike<AsyncIterab
                 if ( !switchFast ) {
                     await iteratorsConcurrency.acquire();
                 }
+            }, err => {
+                if ( future ) {
+                    future.reject( err );
+                    future = null;
+                } else {
+                    buffer.push( [ null, Either.right( err ) ] );
+                }
             } ).then( () => {
                 drainedMain = true;
 
@@ -171,7 +178,9 @@ export function flattenConcurrent<T> ( iterables : AsyncIterableLike<AsyncIterab
             
                         const [ iter, res ] = buffer.shift();
             
-                        pull( iter );
+                        if ( iter ) {
+                            pull( iter );
+                        }
             
                         return await res.reduce( value => Promise.resolve( { done: false, value } ), err => Promise.reject( err ) );
                     } finally {

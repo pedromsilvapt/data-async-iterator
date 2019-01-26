@@ -5,5 +5,5 @@ export async function forEach<T> ( iterable : AsyncIterableLike<T>, action : ( i
     return consume( iterable, {
         onValue: action,
         onError: onError as any
-    } );
+    }, onError != null );
 }

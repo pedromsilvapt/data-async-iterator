@@ -1,9 +1,33 @@
 import test from 'blue-tape';
-import { flattenSorted } from './flatMap';
+import { flattenSorted, flatten } from './flatMap';
 import { delay } from '../retimers/delay';
+import { throwIf } from '../errors/throwIf';
 
-test( '#flattenSorted', async t => {
-    test( 'sorted iterables', async t => {
+test( '#flatten', t => {
+    t.test( 'throw exception', async t => {
+        const iterable = flatten( [ throwIf( [ 1, new Error( 'flatten' ), 2, 3 ] ) ] );
+
+        const iterator = iterable[ Symbol.asyncIterator ]();
+
+        t.deepLooseEqual( await iterator.next(), { done: false, value: 1 } );
+        t.shouldFail( iterator.next(), 'flatten' );
+        t.deepLooseEqual( await iterator.next(), { done: false, value: 2 } );
+        t.deepLooseEqual( await iterator.next(), { done: false, value: 3 } );
+        t.deepLooseEqual( await iterator.next(), { done: true, value: void 0 } );
+    } );
+
+    t.test( 'throw exception in the beginning', async t => {
+        const iterable = flatten( [ throwIf( [ new Error( 'flatten' ) ] ) ] );
+
+        const iterator = iterable[ Symbol.asyncIterator ]();
+
+        t.shouldFail( iterator.next(), 'flatten' );
+        t.deepLooseEqual( await iterator.next(), { done: true, value: void 0 } );
+    } );
+} );
+
+test( '#flattenSorted', t => {
+    t.test( 'sorted iterables', async t => {
         const iterable = flattenSorted( [ 
             delay( [ 1, 3, 5 ], 100 ) ,
             delay( [ 2, 4, 6 ], 210 )
@@ -20,7 +44,7 @@ test( '#flattenSorted', async t => {
         t.deepLooseEqual( await iterator.next(), { done: true, value: void 0 } );
     } );
 
-    test( 'sorted iterables return early', async t => {
+    t.test( 'sorted iterables return early', async t => {
         const iterable = flattenSorted( [ 
             delay( [ 1, 3, 5 ], 100 ) ,
             delay( [ 2, 4, 6 ], 210 )
