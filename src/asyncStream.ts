@@ -67,6 +67,7 @@ import { throwIf } from "./errors/throwIf";
 import { dynamic } from "./constructors/dynamic";
 import { fromArray } from "./constructors/fromArray";
 import { fromPromises } from "./constructors/fromPromises";
+import { paginate, PaginationMethod } from "./constructors/paginate";
 
 import { concat } from "./combinators/concat";
 import { flatten, flattenConcurrent, flattenLast, flatMap, flatMapLast, flatMapConcurrent, flattenSorted, flatMapSorted } from "./combinators/flatMap";
@@ -113,6 +114,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
 
     static stateful<S, T> ( reducer : ( item : S ) => [S,  T] | Promise<[S, T]>, seed : S ) : AsyncStream<T> {
         return AsyncStream.repeat( null ).stateful( state => reducer( state ), seed );
+    }
+
+    static paginate<T> ( supplier : ( page : number ) => AsyncIterableLike<T>, method : PaginationMethod = PaginationMethod.Page, start : number = 0 ) {
+        return new AsyncStream( paginate( supplier, method, start ) );
     }
 
     /* COMBINATORS */

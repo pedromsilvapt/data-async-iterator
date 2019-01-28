@@ -1,12 +1,14 @@
 import './polyfill';
 
 export { concat } from './combinators/concat';
-export { flatMap, flatMapConcurrent, flatten, flatMapLast, flattenConcurrent, flattenLast } from './combinators/flatMap';
+export { flatMap, flatMapConcurrent, flatMapLast, flatMapSorted } from './combinators/flatMap';
+export { flatten, flattenConcurrent, flattenLast, flattenSorted } from './combinators/flatMap';
 export { merge } from './combinators/merge';
 
 export { dynamic } from './constructors/dynamic';
 export { fromArray } from './constructors/fromArray';
 export { fromPromises } from './constructors/fromPromises';
+export { paginate } from './constructors/paginate';
 
 export { subject, AsyncIterableSubject } from './generators/subject';
 export { range } from './generators/range';
