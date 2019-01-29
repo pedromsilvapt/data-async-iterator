@@ -1,7 +1,7 @@
 import { subject } from "../generators/subject";
 import { Either } from "@pedromsilva/data-either";
 
-export function fromPromises <T> ( promises : Promise<T>[], sequential : boolean = false ) : AsyncIterableIterator<T> {
+export function fromPromisesArray <T> ( promises : Promise<T>[], sequential : boolean = false ) : AsyncIterableIterator<T> {
     const emitter = subject<T>();
 
     // Counts how many promises are still unresolved. Useful to know when to end the emitter,

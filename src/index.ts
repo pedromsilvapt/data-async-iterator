@@ -7,12 +7,12 @@ export { merge } from './combinators/merge';
 
 export { dynamic } from './constructors/dynamic';
 export { fromArray } from './constructors/fromArray';
-export { fromPromises } from './constructors/fromPromises';
+export { fromPromisesArray as fromPromises } from './constructors/fromPromisesArray';
 export { paginate } from './constructors/paginate';
 
 export { subject, AsyncIterableSubject } from './generators/subject';
 export { range } from './generators/range';
-export { repeat } from './generators/repeat';
+export { repeat, single } from './generators/repeat';
 
 export { count } from './queries/count';
 export { every } from './queries/every';

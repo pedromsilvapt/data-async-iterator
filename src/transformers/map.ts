@@ -2,7 +2,9 @@ import { AsyncIterableLike, toAsyncIterator } from "../core";
 
 // For await isn't nice to errors
 // Also, generators return AsyncIetrableIterators instead of AsyncIterables only
-export function map<I, O> ( iterable : AsyncIterableLike<I>, mapper : ( item : I, index : number ) => O | Promise<O> | Promise<never> ) : AsyncIterable<O> {
+export function map<I, O> ( iterable : AsyncIterableLike<I>, mapper : ( item : I, index : number ) => O | Promise<O> | Promise<never>, resolve ?: true ) : AsyncIterable<O>;
+export function map<I, O> ( iterable : AsyncIterableLike<I>, mapper : ( item : I, index : number ) => O, resolve : boolean ) : AsyncIterable<O>;
+export function map<I, O> ( iterable : AsyncIterableLike<I>, mapper : ( item : I, index : number ) => O | Promise<O> | Promise<never>, resolve : boolean = true ) : AsyncIterable<O> {
     return {
         [ Symbol.asyncIterator ] () : AsyncIterableIterator<O> {
             let index = 0;
@@ -20,10 +22,14 @@ export function map<I, O> ( iterable : AsyncIterableLike<I>, mapper : ( item : I
                             return result as unknown as IteratorResult<O>;
                         }
                         
-                        return Promise.resolve( mapper( result.value, index++ ) ).then( value => ( {
-                            done: false,
-                            value: value
-                        } ) );
+                        if ( resolve ) {
+                            return Promise.resolve( mapper( result.value, index++ ) ).then( value => ( {
+                                done: false,
+                                value: value
+                            } ) );
+                        } else {
+                            return { done: false, value: mapper( result.value, index++ ) as any };
+                        }
                     } );
                 },
 

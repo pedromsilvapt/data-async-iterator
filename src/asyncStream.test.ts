@@ -5,8 +5,6 @@ test( '#dynamic and flatten', t => {
     t.test( 'throw exception', async t => {
         const iterable = AsyncStream.dynamic( async () => {
             throw new Error( 'dynamic' );
-
-            return [];
         } ).flatten();
 
         const iterator = iterable[ Symbol.asyncIterator ]();

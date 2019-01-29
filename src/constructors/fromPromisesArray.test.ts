@@ -1,13 +1,13 @@
 import test from 'blue-tape';
-import { fromPromises } from './fromPromises';
+import { fromPromisesArray } from './fromPromisesArray';
 
 const delayed = <T>( value : T, delay : number ) : Promise<T> => {
     return new Promise<T>( resolve => setTimeout( () => resolve( value ), delay ) );
 }
 
-test( '#fromArray', async t => {
+test( '#fromPromisesArray', async t => {
     t.test( 'first in first out order', async t => {
-        const iterable = fromPromises( [
+        const iterable = fromPromisesArray( [
             delayed( 1, 100 ),
             delayed( 3, 400 ),
             delayed( 2, 300 ),
@@ -24,7 +24,7 @@ test( '#fromArray', async t => {
     } );
 
     t.test( 'sequential', async t => {
-        const iterable = fromPromises( [
+        const iterable = fromPromisesArray( [
             delayed( 1, 100 ),
             delayed( 3, 400 ),
             delayed( 2, 300 ),
@@ -40,7 +40,7 @@ test( '#fromArray', async t => {
         t.deepLooseEqual( await iterator.next(), { done: true, value: void 0 } );
     } );
     t.test( 'sequential with errors', async t => {
-        const iterable = fromPromises( [
+        const iterable = fromPromisesArray( [
             delayed( 1, 100 ),
             delayed( 3, 300 ),
             delayed( 2, 200 ).then( () => Promise.reject( new Error( 'fromPromises' ) ) ),

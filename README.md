@@ -12,8 +12,13 @@ npm install --save data-async-iterators
     - They only calculate the next value when it is requested; thus only calculating the values that are needed
  - Some methods require buffering values: be careful when mixing them with slow consumers
  - Iterators need consumers: since transformations are lazy, not consuming (subscribing) to an iterator means nothing happens
- - When manually using an iterator (calling `next()`), one should be careful to call `return()` on operators that provide it as well, when stopping the iterator in the middle, to allow to free any resources
+ - When manually using an iterator (calling `next()`), one should be careful to call `return()` on iterators that provide it as well, when the iterator is not needed anymore before it has ended, to allow it to free any resources it might be holding
  - Most operators return iterables. If provided with iterables as well, they can be iterated multiple times (instead of just once). Other iterators return iterators: these can only be iterated once
+ - Most operators in this library accept `AsyncIterableLike<T>` instead of `AsyncIterable<T>`. This means certain rules apply:
+    - `Iterable<T>`'s are transformed to `AsyncIterable<T>`'s;
+    - `Iterator<T>`'s and `AsyncIetrator<T>`'s are transformed to `AsyncIterable<T>`'s that always return the same, original iterator;
+    - `Promise<AsyncIterableLike<T>>`'s are converted to `AsyncIterable<T>`, waiting for the promise before using the resolved iterable;
+    - The operator `fromPromise<T>( promise : Promise<T> )` returns an `AsyncIterable<T>` that only ever emits one value or one exception, whatever is resolved by the promise;
 
 # Usage
 Contains all the common utility functions like map, filter, takeWhile, flatMap, concat, and many more as well as more async-centric ones

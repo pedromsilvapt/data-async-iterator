@@ -1,6 +1,10 @@
-export type AsyncIterableLike<T> = AsyncIterable<T> | AsyncIterableIterator<T> | AsyncIterator<T> | Iterable<T> | Promise<T>;
+import { Optional } from 'data-optional';
 
-export function isAsync<T> ( iterable : AsyncIterableLike<T> ) : iterable is ( AsyncIterable<T> | Promise<T> ) {
+type AsyncIterableLikeAux<T> = AsyncIterable<T> | AsyncIterableIterator<T> | AsyncIterator<T> | Iterable<T>;
+
+export type AsyncIterableLike<T> = AsyncIterableLikeAux<T> | Promise<AsyncIterableLikeAux<T>>;
+
+export function isAsync<T> ( iterable : AsyncIterableLike<T> ) : iterable is ( AsyncIterable<T> | Promise<AsyncIterableLikeAux<T>> ) {
     if ( iterable && ( isAsyncIterable( iterable ) || iterable instanceof Promise ) ) {
         return true;
     }
@@ -41,11 +45,65 @@ export function from<T> ( iterable : AsyncIterableLike<T> ) : AsyncIterable<T> {
         return iterable;
     } else if ( isAsyncIterator( iterable ) ) {
         return fromAsyncIterator( iterable );
+    } else if ( iterable instanceof Promise ) {
+        return fromIterablePromise( iterable );
     } else if ( isSync( iterable ) ) {
         return fromSync( iterable );
     } else {
         return fromPromise( iterable );
     }
+}
+
+export function fromIterablePromise<T> ( promise : Promise<AsyncIterableLikeAux<T>> ) : AsyncIterable<T> {
+    return {
+        [ Symbol.asyncIterator ] () {
+            let error : Optional<any> = Optional.empty();
+
+            let iterator : AsyncIterator<T> = null;
+
+            const blocker = promise.then( iterable => iterator = from( iterable )[ Symbol.asyncIterator ](), err => error = Optional.of( err ) );
+
+            return {
+                next ( input ?: any ) : Promise<IteratorResult<T>> {
+                    return blocker.then( () => {
+                        if ( error.isPresent() ) {
+                            const tmp = error.get();
+
+                            error = Optional.empty();
+
+                            return Promise.reject( tmp );
+                        }
+
+                        if ( iterator == null ) {
+                            return { done: true, value: void 0 };
+                        }
+
+                        return iterator.next( input );
+                    } );
+                },
+
+                throw ( reason ?: any ) : Promise<IteratorResult<T>> {
+                    return blocker.then( () => {
+                        if ( iterator != null && iterator.throw ) {
+                            return iterator.throw( reason );
+                        } else {
+                            return Promise.reject( reason );
+                        }
+                    } );
+                },
+
+                return ( value ?: any ) : Promise<IteratorResult<T>> {
+                    return blocker.then( () => {
+                        if ( iterator != null && iterator.return ) {
+                            return iterator.return( value );
+                        } else {
+                            return { done: true, value: value };
+                        }
+                    } );
+                }
+            }
+        }
+    };
 }
 
 export function fromAsyncIterator<T> ( iterator : AsyncIterator<T> ) : AsyncIterable<T> {

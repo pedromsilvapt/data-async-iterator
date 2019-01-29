@@ -3,7 +3,7 @@ import { Optional } from "data-optional";
 import { Either } from "@pedromsilva/data-either";
 import { SemaphoreLike } from "data-semaphore";
 
-import { AsyncIterableLike, toAsyncIterable, toAsyncIterator, toAsyncIterableIterator } from "./core";
+import { AsyncIterableLike, toAsyncIterable, toAsyncIterator, toAsyncIterableIterator, fromPromise } from "./core";
 
 import { map } from "./transformers/map";
 import { filter, reject } from "./transformers/filter";
@@ -52,7 +52,7 @@ import { tap } from "./queries/tap";
 import { AsyncIterableSubject, subject } from "./generators/subject";
 import { empty } from "./generators/empty";
 import { range } from "./generators/range";
-import { repeat } from "./generators/repeat";
+import { repeat, single } from "./generators/repeat";
 
 import { filterErrors } from "./errors/filterErrors";
 import { mapEither } from "./errors/mapEither";
@@ -66,7 +66,7 @@ import { throwIf } from "./errors/throwIf";
 
 import { dynamic } from "./constructors/dynamic";
 import { fromArray } from "./constructors/fromArray";
-import { fromPromises } from "./constructors/fromPromises";
+import { fromPromisesArray as fromPromisesArray } from "./constructors/fromPromisesArray";
 import { paginate, PaginationMethod } from "./constructors/paginate";
 
 import { concat } from "./combinators/concat";
@@ -85,11 +85,15 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( empty() );
     }
 
+    static single <T> ( value : T ) : AsyncStream<T> {
+        return new AsyncStream( single( value ) );
+    }
+
     static range ( start : number = 0, end : number = Infinity, step : number = 1 ) : AsyncStream<number> {
         return new AsyncStream( range( start, end, step ) );
     }
 
-    static repeat<T> ( value : T, count : number = Infinity ) : AsyncStream<T> {
+    static repeat <T = void> ( value : T = void 0, count : number = Infinity ) : AsyncStream<T> {
         return new AsyncStream( repeat( value, count ) );
     }
 
@@ -100,6 +104,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* CONSTRUCTORS */
+    static from<T> ( iterable : AsyncIterableLike<T> ) : AsyncStream<T> {
+        return new AsyncStream( iterable );
+    }
+
     static dynamic<T> ( factory : () => AsyncIterableLike<T>, lazy : boolean = false ) : AsyncStream<T> {
         return new AsyncStream( dynamic( factory, lazy ) );
     }
@@ -108,8 +116,12 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( fromArray( array ) );
     }
 
-    static fromPromises<T> ( promises : Promise<T>[], sequential : boolean = false ) : AsyncStream<T> {
-        return new AsyncStream( fromPromises( promises, sequential ) );
+    static fromPromisesArray<T> ( promises : Promise<T>[], sequential : boolean = false ) : AsyncStream<T> {
+        return new AsyncStream( fromPromisesArray( promises, sequential ) );
+    }
+
+    static fromPromise<T> ( promise : Promise<T> ) : AsyncStream<T> {
+        return new AsyncStream( fromPromise( promise ) );
     }
 
     static stateful<S, T> ( reducer : ( item : S ) => [S,  T] | Promise<[S, T]>, seed : S ) : AsyncStream<T> {
@@ -167,19 +179,19 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* COMBINATORS */
-    flatMap<U> ( mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U> ) : AsyncStream<U> {
+    flatMap<U> ( mapper : ( item : T, index : number ) => AsyncIterableLike<U> ) : AsyncStream<U> {
         return new AsyncStream( flatMap( this.iterable, mapper ) );
     }
 
-    flatMapLast<U> ( mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U>, concurrency : number ) : AsyncStream<U> {
+    flatMapLast<U> ( mapper : ( item : T, index : number ) => AsyncIterableLike<U>, concurrency : number ) : AsyncStream<U> {
         return new AsyncStream( flatMapLast( this.iterable, mapper, concurrency ) );
     }
 
-    flatMapConcurrent<U> ( mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U>, concurrency : number, switchFast : boolean = false ) : AsyncStream<U> {
+    flatMapConcurrent<U> ( mapper : ( item : T, index : number ) => AsyncIterableLike<U>, concurrency : number, switchFast : boolean = false ) : AsyncStream<U> {
         return new AsyncStream( flatMapConcurrent( this.iterable, mapper, concurrency, switchFast ) );
     }
 
-    flatMapSorted<U> ( mapper : ( item : T, index : number ) => Promise<Iterable<U>> | AsyncIterableLike<U>, comparator : Comparator<U> ) : AsyncStream<U> {
+    flatMapSorted<U> ( mapper : ( item : T, index : number ) => AsyncIterableLike<U>, comparator : Comparator<U> ) : AsyncStream<U> {
         return new AsyncStream( flatMapSorted( this.iterable as AsyncIterable<any>, mapper, comparator ) );
     }
 
@@ -493,8 +505,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
     }
 
     /* TRANSFORMERS */
-    map <O> ( mapper : ( item : T, index : number ) => O | Promise<O> | Promise<never> ) : AsyncStream<O> {
-        return new AsyncStream( map( this.iterable, mapper ) );
+    map <O> ( mapper : ( item : T, index : number ) => O | Promise<O> | Promise<never>, resolve ?: true ) : AsyncStream<O>;
+    map <O> ( mapper : ( item : T, index : number ) => O, resolve : boolean ) : AsyncStream<O>;
+    map <O> ( mapper : ( item : T, index : number ) => O | Promise<O> | Promise<never>, resolve : boolean = true ) : AsyncStream<O> {
+        return new AsyncStream( map<T, any>( this.iterable, mapper, resolve ) );
     }
 
     filter ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> | Promise<never> ) {
