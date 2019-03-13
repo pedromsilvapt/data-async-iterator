@@ -13,6 +13,7 @@ import { cancellable } from "./transformers/cancellable";
 import { buffered } from "./transformers/buffered";
 import { Observer, observe } from "./transformers/observe";
 import { scan, scanSelf } from "./transformers/scan";
+import { stateful } from "./transformers/stateful";
 
 import { drop, dropWhile, dropUntil, dropLast } from "./slicers/drop";
 import { init } from "./slicers/init";
@@ -26,7 +27,9 @@ import { liveUntil } from "./retimers/liveUntil";
 import { throttle } from "./retimers/throttle";
 import { synchronize } from "./retimers/synchronize";
 import { valve, release, releaseOnEnd } from "./retimers/valve";
+import { sort } from "./retimers/sort";
 
+import { collect } from "./reducers/collect";
 import { consume } from "./reducers/consume";
 import { drain } from "./reducers/drain";
 import { forEach } from "./reducers/forEach";
@@ -71,13 +74,13 @@ import { paginate, PaginationMethod } from "./constructors/paginate";
 
 import { concat } from "./combinators/concat";
 import { flatten, flattenConcurrent, flattenLast, flatMap, flatMapLast, flatMapConcurrent, flattenSorted, flatMapSorted } from "./combinators/flatMap";
+import { parallel } from "./combinators/parallel";
 import { merge } from "./combinators/merge";
+
 import { dup, fork, SharedNetwork, shared } from "./misc/shared";
 import { replay } from "./misc/replay";
-import { stateful } from "./transformers/stateful";
+
 import { Collector, Comparator } from "data-collectors";
-import { collect } from "./reducers/collect";
-import { sort } from "./retimers/sort";
 
 export class AsyncStream<T> implements AsyncIterable<T> {
     /* GENERATORS */
@@ -211,6 +214,10 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( flattenSorted( this.iterable as AsyncIterable<any>, comparator as any ) );
     }
 
+    parallel <U> ( fn : ( item : T, index : number ) => U | Promise<U> | Promise<never>, concurent : number ) : AsyncStream<U> {
+        return new AsyncStream( parallel( this.iterable, fn, concurent ) );
+    }
+
     concat ( first : AsyncIterableLike<T>, ...values : AsyncIterableLike<T>[] ) : AsyncStream<T>;
     concat<U> () : AsyncStream<T extends AsyncIterableLike<U> ? U : never>;
     concat ( ...args : any[] ) : AsyncStream<any> {
@@ -279,8 +286,8 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return collect( this.iterable, collector );
     }
 
-    consume ( observer : Partial<Observer<T>> ) : Promise<void> {
-        return consume( this.iterable, observer );
+    consume ( observer : Partial<Observer<T>>, ignoreErrors : boolean = true ) : Promise<void> {
+        return consume( this.iterable, observer, ignoreErrors );
     }
 
     drain ( ignoreErrors : boolean = false ) : Promise<void> {
