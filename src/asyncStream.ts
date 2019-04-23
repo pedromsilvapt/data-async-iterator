@@ -10,6 +10,7 @@ import { filter, reject } from "./transformers/filter";
 import { distinct, distinctUntilChanged } from "./transformers/distinct";
 import { IterablePackage, describe } from "./transformers/describe";
 import { cancellable } from "./transformers/cancellable";
+import { chunk, chunkByLines, chunkEvery, chunkUntil, chunkWhile } from "./transformers/chunk";
 import { buffered } from "./transformers/buffered";
 import { Observer, observe } from "./transformers/observe";
 import { scan, scanSelf } from "./transformers/scan";
@@ -540,6 +541,26 @@ export class AsyncStream<T> implements AsyncIterable<T> {
 
     cancellable ( cancel ?: CancelToken ) : AsyncStream<T> {
         return new AsyncStream( cancellable( this.iterable, cancel ) );
+    }
+
+    chunk<U> ( fn : ( item : T, index : number, buffer : U[] ) => AsyncIterableLike<U | symbol>, autoFlush : boolean = true ) : AsyncStream<U[]> {
+        return new AsyncStream( chunk( this.iterable, fn, autoFlush ) );
+    }
+
+    chunkByLines () : AsyncStream<string> {
+        return new AsyncStream( chunkByLines( this.iterable as AsyncIterable<any> ) );
+    }
+
+    chunkEvery ( count : number ) : AsyncStream<T[]> {
+        return new AsyncStream( chunkEvery( this.iterable, count ) );
+    }
+
+    chunkUntil ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncStream<T[]> {
+        return new AsyncStream( chunkUntil( this.iterable, predicate ) );
+    }
+
+    chunkWhile ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncStream<T[]> {
+        return new AsyncStream( chunkWhile( this.iterable, predicate ) );
     }
 
     buffered ( size : number ) : AsyncStream<T> {

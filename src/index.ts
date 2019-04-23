@@ -51,6 +51,7 @@ export { take, takeLast, takeUntil, takeWhile } from './slicers/take';
 
 export { buffered } from './transformers/buffered';
 export { cancellable } from './transformers/cancellable';
+export { chunk, chunkEvery, chunkUntil, chunkWhile, chunkByLines, sep, reset, backlog } from './transformers/chunk';
 export { describe } from './transformers/describe';
 export { distinct, distinctUntilChanged } from './transformers/distinct';
 export { filter, reject } from './transformers/filter';
