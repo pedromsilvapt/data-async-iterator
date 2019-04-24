@@ -21,7 +21,7 @@ export function isAsyncIterable<T> ( iterable : AsyncIterableLike<T> ) : iterabl
 }
 
 export function isAsyncIterator<T> ( iterable : any ) : iterable is AsyncIterator<T> {
-    if ( iterable && typeof ( iterable as any ).next === 'function' ) {
+    if ( iterable && !iterable[ Symbol.iterator ] && typeof ( iterable as any ).next === 'function' ) {
         return true;
     }
 
