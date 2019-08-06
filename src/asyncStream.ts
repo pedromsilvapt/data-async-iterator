@@ -16,11 +16,11 @@ import { Observer, observe } from "./transformers/observe";
 import { scan, scanSelf } from "./transformers/scan";
 import { stateful } from "./transformers/stateful";
 
-import { drop, dropWhile, dropUntil, dropLast } from "./slicers/drop";
+import { drop, dropWhile, dropUntil, dropLast, DropPredicate } from "./slicers/drop";
 import { init } from "./slicers/init";
 import { slice } from "./slicers/slice";
 import { tail } from "./slicers/tail";
-import { take, takeWhile, takeUntil, takeLast } from "./slicers/take";
+import { take, takeWhile, takeUntil, takeLast, TakePredicate } from "./slicers/take";
 
 import { debounce } from "./retimers/debounce";
 import { delay } from "./retimers/delay";
@@ -472,11 +472,11 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( drop( this.iterable, count, countErrors ) );
     }
 
-    dropWhile ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncStream<T> {
+    dropWhile ( predicate : DropPredicate<T> ) : AsyncStream<T> {
         return new AsyncStream( dropWhile( this.iterable, predicate ) );
     }
 
-    dropUntil ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncStream<T> {
+    dropUntil ( predicate : DropPredicate<T> | Promise<unknown> ) : AsyncStream<T> {
         return new AsyncStream( dropUntil( this.iterable, predicate ) );
     }
 
@@ -500,11 +500,11 @@ export class AsyncStream<T> implements AsyncIterable<T> {
         return new AsyncStream( take( this.iterable, count ) );
     }
 
-    takeWhile ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncStream<T> {
+    takeWhile ( predicate : TakePredicate<T> ) : AsyncStream<T> {
         return new AsyncStream( takeWhile( this.iterable, predicate ) );
     }
 
-    takeUntil ( predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncStream<T> {
+    takeUntil ( predicate : TakePredicate<T> | Promise<unknown> ) : AsyncStream<T> {
         return new AsyncStream( takeUntil( this.iterable, predicate ) );
     }
 

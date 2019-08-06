@@ -56,7 +56,9 @@ export function drop<T> ( iterable : AsyncIterableLike<T>, count : number, count
     } );
 }
 
-export function dropWhile<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterable<T> {
+export type DropPredicate<T> = ( item : T, index : number ) => boolean | Promise<boolean>;
+
+export function dropWhile<T> ( iterable : AsyncIterableLike<T>, predicate : DropPredicate<T> ) : AsyncIterable<T> {
     return {
         [ Symbol.asyncIterator ] () {
             const iterator = toAsyncIterator( iterable );
@@ -108,8 +110,20 @@ export function dropWhile<T> ( iterable : AsyncIterableLike<T>, predicate : ( it
     };
 }
 
-export function dropUntil<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterable<T> {
-    return dropWhile( iterable, async ( item, index ) => !await predicate( item, index ) );
+export function dropUntil<T> ( iterable : AsyncIterableLike<T>, predicate : DropPredicate<T> | Promise<unknown> ) : AsyncIterable<T> {
+    if ( predicate instanceof Promise ) {
+        let resolved = false;
+
+        // TODO drop should break eraly when the promise resolves, instead of possibly
+        // waiting for the source iterator to return before checking the promise state
+        if ( predicate instanceof Promise ) {
+            predicate.then( () => resolved = true, () => resolved = true );
+        }
+
+        return dropWhile( iterable, async () => !resolved );
+    } else {
+        return dropWhile( iterable, async ( item, index ) => !await predicate( item, index ) );
+    }
 }
 
 export function dropLast<T> ( iterable : AsyncIterableLike<T>, count : number ) : AsyncIterable<T> {

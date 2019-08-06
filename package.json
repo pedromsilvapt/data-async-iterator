@@ -1,6 +1,6 @@
 {
   "name": "data-async-iterators",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Batteries-included utility functions to work with async iterables available in ES2018/TypeScript",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",

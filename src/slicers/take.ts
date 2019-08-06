@@ -59,7 +59,9 @@ export function take<T> ( iterable : AsyncIterableLike<T>, count : number ) : As
     } );
 }
 
-export function takeWhile<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterable<T> {
+export type TakePredicate<T> = ( item : T, index : number ) => boolean | Promise<boolean>;
+
+export function takeWhile<T> ( iterable : AsyncIterableLike<T>, predicate : TakePredicate<T> ) : AsyncIterable<T> {
     return safe( {
         [ Symbol.asyncIterator ] () {
             const iterator = toAsyncIterator( iterable );
@@ -109,8 +111,20 @@ export function takeWhile<T> ( iterable : AsyncIterableLike<T>, predicate : ( it
     } );
 }
 
-export function takeUntil<T> ( iterable : AsyncIterableLike<T>, predicate : ( item : T, index : number ) => boolean | Promise<boolean> ) : AsyncIterable<T> {
-    return takeWhile( iterable, async ( item, index ) => !await predicate( item, index ) );
+export function takeUntil<T> ( iterable : AsyncIterableLike<T>, predicate : TakePredicate<T> | Promise<unknown> ) : AsyncIterable<T> {
+    if ( predicate instanceof Promise ) {
+        let resolved = false;
+
+        // TODO take should break eraly when the promise resolves, instead of possibly
+        // waiting for the source iterator to return before checking the promise state
+        if ( predicate instanceof Promise ) {
+            predicate.then( () => resolved = true, () => resolved = true );
+        }
+
+        return takeWhile( iterable, async () => !resolved );
+    } else {
+        return takeWhile( iterable, async ( item, index ) => !await predicate( item, index ) );
+    }
 }
 
 export function takeLast<T> ( iterable : AsyncIterableLike<T>, count : number ) : AsyncIterable<T> {
