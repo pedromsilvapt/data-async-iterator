@@ -12,7 +12,7 @@ import { IterablePackage, describe } from "./transformers/describe";
 import { cancellable } from "./transformers/cancellable";
 import { chunk, chunkByLines, chunkEvery, chunkUntil, chunkWhile } from "./transformers/chunk";
 import { buffered } from "./transformers/buffered";
-import { Observer, observe } from "./transformers/observe";
+import { Observer, observe, log, logErrors } from "./transformers/observe";
 import { scan, scanSelf } from "./transformers/scan";
 import { stateful } from "./transformers/stateful";
 
@@ -569,6 +569,14 @@ export class AsyncStream<T> implements AsyncIterable<T> {
 
     observe ( observer : Partial<Observer<T>> ) : AsyncStream<T> {
         return new AsyncStream( observe( this.iterable, observer ) );
+    }
+
+    log ( label ?: string ) : AsyncStream<T> {
+        return new AsyncStream( log( this.iterable, label ) );
+    }
+
+    logErrors ( label ?: string ) : AsyncStream<T> {
+        return new AsyncStream( logErrors( this.iterable, label ) );
     }
 
     scan <R> ( reducer : ( memo : R, item : T ) => R | Promise<R>, seed : R ) : AsyncStream<R> {

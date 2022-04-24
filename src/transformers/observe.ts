@@ -43,9 +43,9 @@ export function observe<T> ( iterable : AsyncIterableLike<T>, observer : Partial
                     } catch ( error ) {
                         if ( observer.onError ) {
                             await observer.onError( error );
-                        } else {
-                            throw error;
                         }
+
+                        throw error;
                     }
                 },
                 
@@ -74,6 +74,18 @@ export function observe<T> ( iterable : AsyncIterableLike<T>, observer : Partial
             };
         }
     }
+}
+
+export function logErrors<T> ( iterables : AsyncIterableLike<T>, label : string = 'iterable' ) : AsyncIterable<T> {
+    const write = ( hasData : boolean, data ?: any ) => {
+        console.log( `[${ label }] <error>`, hasData ? data : '' );
+    };
+
+    return observe( iterables, {
+        onError ( error : any ) {
+            write( true, error );
+        }
+    } );
 }
 
 export function log<T> ( iterables : AsyncIterableLike<T>, label : string = 'iterable' ) : AsyncIterable<T> {

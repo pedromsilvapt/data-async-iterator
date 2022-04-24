@@ -39,6 +39,7 @@ export { toSet } from './reducers/toSet';
 export { liveUntil } from './retimers/liveUntil';
 export { debounce } from './retimers/debounce';
 export { delay } from './retimers/delay';
+export { sort } from './retimers/sort';
 export { synchronize } from './retimers/synchronize';
 export { throttle } from './retimers/throttle';
 export { valve, release, releaseOnEnd } from './retimers/valve';
@@ -56,7 +57,7 @@ export { describe } from './transformers/describe';
 export { distinct, distinctUntilChanged } from './transformers/distinct';
 export { filter, reject } from './transformers/filter';
 export { map } from './transformers/map';
-export { observe, log } from './transformers/observe';
+export { observe, log, logErrors } from './transformers/observe';
 export { safe } from './transformers/safe';
 export { scan, scanSelf } from './transformers/scan';
 

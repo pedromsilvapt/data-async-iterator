@@ -9,6 +9,7 @@
         "outDir": "lib/",
         "experimentalDecorators": true,
         "esModuleInterop": true,
+        "skipLibCheck": true,
         "lib": [
             "es2015.promise", "es2015", "esnext.asynciterable"
         ]

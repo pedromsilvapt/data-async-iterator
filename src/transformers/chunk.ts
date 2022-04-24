@@ -75,7 +75,7 @@ export function chunk<T, U> ( iterable : AsyncIterableLike<T>, fn : ( item : T, 
 
                                     backlogBuffer.push( value as any as T );
                                 } else {
-                                    buffer.push( value as U );
+                                    buffer.push( value as any as U );
                                 }
                             } else {
                                 buffer.push( value );
